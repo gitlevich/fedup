@@ -17,6 +17,18 @@ data class User(
     override val identity = email
 }
 
+/**
+ * Subscribes to user-notifications stream and pushes events from this stream to the users they are addressed to
+ */
+class UserNotificationService {
+
+    /**
+     * Pushes the specified notification to the user's device
+     */
+    fun notifyUser(user: User, notification: Any) {
+
+    }
+}
 
 class UserService(private val userRepository: UserRepository) {
     fun register(user: User) {

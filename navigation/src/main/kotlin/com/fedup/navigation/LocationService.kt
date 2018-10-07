@@ -3,27 +3,32 @@ package com.fedup.navigation
 import com.fedup.common.*
 import com.google.maps.*
 import com.google.maps.model.*
+import org.springframework.stereotype.*
 
-data class UserLocation(val userId: UserId, val location: Location)
 data class HowFar(val distance: Distance, val duration: Duration)
 data class UserWithDistance(val userId: UserId, val distanceMessage: String)
 
-data class UserLocationChanged(val user: UserId, val position: Location) // sent by the user when his position needs to be tracked in real time
-
-
-class LocationService {
-    fun reportUserLocation(userId: String, location: Location) {
-        // publishes user location to the user-location stream
+/**
+ * Subscribes to the user-location stream, where it listens for [NearbyDriversRequested] events. Upon receiving one,
+ * finds the drivers and publishes [DriversLocated] event to the shipping stream (keyed by [TrackingId])
+ */
+@Component
+class LocationService(
+    private val userLocationRepository: UserLocationRepository,
+    private val googleMapsApiKey: String
+) {
+    fun recordUserLocation(userLocation: UserLocation) {
+        userLocationRepository.saveUserLocation(userLocation)
     }
 
     fun closestDrivers(location: Location): List<UserWithDistance> {
-        val availableDrivers = findAvailableDrivers()
+        val availableDrivers = userLocationRepository.findAvailableDrivers()
         val driverLocations = availableDrivers
             .map { it.location.toString() }
             .toTypedArray()
 
         val context = GeoApiContext.Builder()
-            .apiKey("AIzaSyBKFAiP9PjPaB8V-XtMivC1gc4HMLuiK8M")
+            .apiKey(googleMapsApiKey)
             .build()
 
         val distanceMatrix = DistanceMatrixApi
@@ -39,13 +44,18 @@ class LocationService {
     }
 
 
-
-    private fun findAvailableDrivers(): List<UserLocation> {
-        return listOf(UserLocation("1", Location(37.7724868,-122.4166086)), UserLocation("2", Location(37.7339012,-122.4194585)), UserLocation("3", Location(37.7486923,-122.4186179)))
-    }
 }
 
-fun main(args: Array<String>) {
-    val closestDrivers = LocationService().closestDrivers(Location(37.755774, -122.419591))
-    closestDrivers.forEach { println(it) }
+/**
+ * Sits on top of user-location stream-backed KTable
+ */
+@Component
+class UserLocationRepository {
+    fun findAvailableDrivers(): List<UserLocation> {
+        return listOf(UserLocation("1", Location(37.7724868,-122.4166086)), UserLocation("2", Location(37.7339012,-122.4194585)), UserLocation("3", Location(37.7486923,-122.4186179)))
+    }
+
+    fun saveUserLocation(userLocation: UserLocation) {
+
+    }
 }
