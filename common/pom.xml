@@ -3,12 +3,12 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.dddcommunity</groupId>
-    <artifactId>ddd</artifactId>
+    <groupId>com.fedup.deliveries</groupId>
+    <artifactId>common</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>org.dddcommunity characterization</name>
+    <name>Shared code for FedUp Delivery services</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

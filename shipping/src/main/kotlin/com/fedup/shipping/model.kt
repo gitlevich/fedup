@@ -1,22 +1,15 @@
 package com.fedup.shipping
 
-import org.dddcommunity.*
+import com.fedup.common.*
 import java.time.*
 import java.util.*
 
-data class UserId(val value: String)
+sealed class User: Entity<String>()
+data class Shipper(override val identity: String): User()
+data class Receiver(override val identity: String): User()
+data class Driver(override val identity: String): User()
 
-sealed class User:  Entity<UserId>
-data class Shipper(override val identity: UserId): User()
-data class Receiver(override val identity: UserId): User()
-data class Driver(override val identity: UserId): User()
-
-data class Location(val latitude: Double, val longitude: Double)
 data class RoutingSpecification(val origin: Location, val receiver: Receiver, val deliverBy: OffsetDateTime)
-
-// We give directions to a driver to get from his current location to pickup location, then to drop-off location
-data class Segment(val from: Location, val to: Location)
-data class Directions(val segments: List<Segment>)
 
 data class Leg(val driver: Driver, val from: Location, val to: Location)
 data class Itinerary(val legs: List<Leg>)
@@ -32,15 +25,12 @@ data class Shipment(
     val shipper: Shipper,
     val receiver: Receiver,
     val itinerary: Itinerary? = null
-): Entity<TrackingId> {
+): Entity<TrackingId>() {
     override val identity = trackingId
     fun withItinerary(itinerary: Itinerary) = copy(itinerary = itinerary)
 }
 
 data class SpaceTimeCoordinates(val location: Location, val time: OffsetDateTime)
-
-data class UserLocationChanged(val user: User, val position: Location) // sent by the user when his position needs to be tracked in real time
-
 
 sealed class ShipmentEvent {
     abstract val trackingId: TrackingId
@@ -86,14 +76,6 @@ class DriverService(private val shipmentEventRepository: ShipmentEventRepository
     }
 }
 
-/**
- * Provides user location reporting capabilities. Writes to user-location stream
- */
-class UserLocationService {
-    fun reportLocation(user: User, location: Location) {
-        TODO()
-    }
-}
 
 /**
  * Sits on top of event-sourced view of shipment requests by location and shipment stream

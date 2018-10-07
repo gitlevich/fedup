@@ -8,3 +8,14 @@
 GET https://maps.googleapis.com/maps/api/directions/json?origin=37.755774, -122.419591&destination=37.7724868,-122.4166086&key=AIzaSyBKFAiP9PjPaB8V-XtMivC1gc4HMLuiK8M
 
 ###
+
+POST https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyBKFAiP9PjPaB8V-XtMivC1gc4HMLuiK8M
+Content-Type: application/json
+
+{}
+
+###
+
+GET https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=37.755774, -122.419591&destinations=37.7724868,-122.4166086&key=AIzaSyBKFAiP9PjPaB8V-XtMivC1gc4HMLuiK8M
+
+###

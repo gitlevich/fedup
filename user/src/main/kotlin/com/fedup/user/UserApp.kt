@@ -1,4 +1,4 @@
-package com.piggyback.tracking
+package com.fedup.user
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

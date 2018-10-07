@@ -1,4 +1,4 @@
-package org.dddcommunity
+package com.fedup.common
 
 abstract class Entity<ID> {
     abstract val identity: ID

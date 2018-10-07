@@ -15,7 +15,7 @@
     </properties>
 
     <modules>
-        <module>ddd</module>
+        <module>common</module>
         <module>shipping</module>
         <module>navigation</module>
         <module>user</module>

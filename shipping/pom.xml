@@ -44,8 +44,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.dddcommunity</groupId>
-            <artifactId>characterization</artifactId>
+            <groupId>com.fedup.deliveries</groupId>
+            <artifactId>common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
