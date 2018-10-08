@@ -8,6 +8,7 @@ import com.google.maps.model.*
 import org.apache.kafka.common.serialization.*
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.kstream.*
+import org.slf4j.*
 import org.springframework.beans.factory.annotation.*
 import org.springframework.stereotype.*
 
@@ -31,6 +32,7 @@ class LocationService(
 
     override fun start() {
         streams = buildStream().also { it.start() }
+        logger.info("Started location service")
     }
 
     override fun stop() {
@@ -90,6 +92,10 @@ class LocationService(
             .take(maxDriversToFind)
             .map { UserWithDistance(it.second.userId, "${it.first.duration.humanReadable} (${it.first.distance.humanReadable})") }
             .toList()
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(LocationService::class.java)
     }
 }
 

@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.*
 import org.springframework.boot.test.context.*
 import org.springframework.test.context.junit4.*
 
-
 @RunWith(SpringRunner::class)
 @SpringBootTest
 class LocationServiceTest {
@@ -40,8 +39,6 @@ class LocationServiceTest {
     fun setUp() {
         kafka.createTopic(locationService.locationRequests.name, 1, 1)
         kafka.createTopic(locationService.availableDrivers.name, 1, 1)
-
-        locationService.start()
     }
 
     @After
