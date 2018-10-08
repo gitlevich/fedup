@@ -1,11 +1,12 @@
-package com.fedup.navigation
+package com.fedup.location
 
-import com.fedup.shared.*
 import com.fedup.shared.machinery.*
 import com.fedup.shared.machinery.Service
+import com.fedup.shared.protocol.Topics.availableDrivers
+import com.fedup.shared.protocol.Topics.locationRequests
+import com.fedup.shared.protocol.location.*
 import com.google.maps.*
 import com.google.maps.model.*
-import org.apache.kafka.common.serialization.*
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.kstream.*
 import org.slf4j.*
@@ -13,7 +14,6 @@ import org.springframework.beans.factory.annotation.*
 import org.springframework.stereotype.*
 
 data class HowFar(val distance: Distance, val duration: Duration)
-data class UserWithDistance(val userId: UserId, val distanceMessage: String)
 
 /**
  * Owns (is a single writer to) user-location stream.
@@ -26,12 +26,10 @@ class LocationService(
     private val kafkaConfig: KafkaStreamsConfig,
     private val userLocationRepository: UserLocationRepository
 ) : Service {
-    val locationRequests = Topic("location-requests", Serdes.String(), CustomSerdes.commandSerde)
-    val availableDrivers = Topic("available-drivers", Serdes.String(), CustomSerdes.driversLocated)
     private var streams: KafkaStreams? = null
 
     override fun start() {
-        streams = buildStream().also { it.start() }
+        streams = buildStream(kafkaConfig).also { it.start() }
         logger.info("Started location service")
     }
 
@@ -43,7 +41,7 @@ class LocationService(
         userLocationRepository.saveUserLocation(userLocation)
     }
 
-    private fun buildStream(): KafkaStreams {
+    fun buildStream(kafkaStreamsConfig: KafkaStreamsConfig): KafkaStreams {
         val builder = StreamsBuilder()
 
         val locationRequests = builder.stream(
@@ -63,7 +61,7 @@ class LocationService(
                 Produced.with(availableDrivers.keySerde, availableDrivers.valueSerde)
             )
 
-        return KafkaStreams(builder.build(), kafkaConfig.props)
+        return KafkaStreams(builder.build(), kafkaStreamsConfig.props)
     }
 
 
@@ -95,7 +93,7 @@ class LocationService(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(LocationService::class.java)
+        val logger: Logger = LoggerFactory.getLogger(LocationService::class.java)
     }
 }
 

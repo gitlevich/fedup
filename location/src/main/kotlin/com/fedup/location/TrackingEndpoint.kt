@@ -1,6 +1,6 @@
-package com.fedup.navigation
+package com.fedup.location
 
-import com.fedup.shared.*
+import com.fedup.shared.protocol.location.*
 import org.springframework.stereotype.*
 
 // TODO make it a REST endpoint

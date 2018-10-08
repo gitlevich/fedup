@@ -1,18 +1,19 @@
-package com.fedup.navigation
+package com.fedup.shared.protocol.location
 
 import com.fedup.shared.*
+import com.fedup.shared.protocol.location.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
 
-class CustomSerdesTest {
+class LocationSerdesTest {
     private val topic = "blah"
 
     @Test
     fun `should serialize command NearbyDriversRequested and deserialize it back to the original`() {
         val original = NearbyDriversRequested(TrackingId("123"), Location(37.7724868, -122.4166086))
 
-        val serialized = CustomSerdes.commandSerde.serializer().serialize(topic, original)
-        val deserialized = CustomSerdes.commandSerde.deserializer().deserialize(topic, serialized)
+        val serialized = LocationSerdes.commandSerde.serializer().serialize(topic, original)
+        val deserialized = LocationSerdes.commandSerde.deserializer().deserialize(topic, serialized)
 
         assertThat(deserialized).isEqualTo(original)
     }
@@ -24,8 +25,8 @@ class CustomSerdesTest {
             listOf(UserWithDistance("user1", "too far and too long"), UserWithDistance("user2", "even further and longer"))
         )
 
-        val serialized = CustomSerdes.driversLocated.serializer().serialize(topic, original)
-        val deserialized = CustomSerdes.driversLocated.deserializer().deserialize(topic, serialized)
+        val serialized = LocationSerdes.driversLocated.serializer().serialize(topic, original)
+        val deserialized = LocationSerdes.driversLocated.deserializer().deserialize(topic, serialized)
 
         assertThat(deserialized).isEqualTo(original)
     }

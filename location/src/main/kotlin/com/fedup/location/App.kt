@@ -1,4 +1,4 @@
-package com.fedup.navigation
+package com.fedup.location
 
 import com.fedup.shared.machinery.*
 import org.springframework.beans.factory.annotation.*

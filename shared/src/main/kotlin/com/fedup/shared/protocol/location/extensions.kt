@@ -1,4 +1,4 @@
-package com.fedup.navigation
+package com.fedup.shared.protocol.location
 
 import com.fasterxml.jackson.module.kotlin.*
 import com.fedup.shared.*
