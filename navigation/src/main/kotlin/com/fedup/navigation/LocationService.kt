@@ -22,7 +22,6 @@ data class UserWithDistance(val userId: UserId, val distanceMessage: String)
  * finds the drivers and publishes [DriversLocated] event to the user-location stream.
  */
 @SpringBootApplication
-@PropertySource("/application.properties")
 class LocationService(
     @Value("\${googlemaps.api.key}") private val googleMapsApiKey: String,
     private val streamsConfig: StreamsConfig,
