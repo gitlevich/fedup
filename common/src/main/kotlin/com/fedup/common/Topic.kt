@@ -8,5 +8,7 @@ class Topic<K, V>(val name: String, val keySerde: Serde<K>, val valueSerde: Serd
 }
 
 object Topics {
-    val USER_LOCATIONS = Topic("user-locations", Serdes.String(), Serdes.String())
+    val shipments = Topic("shipments", Serdes.String(), Serdes.String())
+    val userLocations = Topic("user-locations", Serdes.String(), Serdes.String())
+    val userNotifications = Topic("user-notification", Serdes.String(), Serdes.String())
 }
