@@ -17,20 +17,14 @@ class LocationServiceTest {
 
     @Test
     fun `should publish DriversLocated event to available-drivers topic upon receiving NearbyDriversRequested request`() {
-        println("-----------------------------------------------------------------------------------------")
-        println("-----------------------------------------------------------------------------------------")
-        println("-----------------------------------------------------------------------------------------")
-        sharedKafkaTestResource.kafkaTestUtils.topicNames.forEach { println("Topic: $it") }
-        println("-----------------------------------------------------------------------------------------")
-
         val request = NearbyDriversRequested(TrackingId("123"), Location(37.7724868, -122.4166086))
         val locationRequests = mapOf(
-            objectMapper.writeValueAsBytes(request.trackingId) to objectMapper.writeValueAsBytes(request)
+            request.trackingId.asBytes() to request.asBytes()
         )
 
         kafka.produceRecords(locationRequests, locationService.locationRequests.name, 0)
         val records = kafka.consumeAllRecordsFromTopic(locationService.availableDrivers.name)
-            .map { objectMapper.readValue(it.key(), TrackingId::class.java) to objectMapper.readValue(it.key(), DriversLocated::class.java) }
+            .map { record -> TrackingId.fromBytes(record.key()) to DriversLocated.fromBytes(record.value()) }
 
         assertThat(records).hasSize(1)
 
@@ -59,6 +53,4 @@ class LocationServiceTest {
         @ClassRule @JvmField public val sharedKafkaTestResource = SharedKafkaTestResource()
         val kafka: KafkaTestUtils by lazy{ sharedKafkaTestResource.kafkaTestUtils }
     }
-
-
 }
