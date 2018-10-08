@@ -1,7 +1,6 @@
 package com.fedup.shipment
 
 import com.fedup.common.machinery.*
-import org.apache.kafka.streams.*
 import org.springframework.beans.factory.annotation.*
 import org.springframework.boot.*
 import org.springframework.boot.autoconfigure.*
@@ -21,7 +20,7 @@ class ApConfig {
     @Bean
     fun streamsConfig(@Value("\${kafka.bootstrap.servers}") bootstrapServers: String,
                       @Value("\${kafka.state.dir}") stateDir: String,
-                      @Value("\${kafka.enableEOS}") enableEOS: Boolean): StreamsConfig =
+                      @Value("\${kafka.enableEOS}") enableEOS: Boolean): KafkaStreamsConfig =
         createStreamsConfig(ShippingService::class.simpleName!!, bootstrapServers, stateDir, enableEOS)
 }
 

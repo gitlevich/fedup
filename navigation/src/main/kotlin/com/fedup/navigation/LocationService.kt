@@ -2,16 +2,14 @@ package com.fedup.navigation
 
 import com.fedup.common.*
 import com.fedup.common.machinery.*
-import com.fedup.navigation.LocationService.Companion.SERVICE_APP_ID
+import com.fedup.common.machinery.Service
 import com.google.maps.*
 import com.google.maps.model.*
 import org.apache.kafka.common.serialization.*
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.kstream.*
 import org.springframework.beans.factory.annotation.*
-import org.springframework.boot.*
-import org.springframework.boot.autoconfigure.*
-import org.springframework.context.annotation.*
+import org.springframework.stereotype.*
 
 data class HowFar(val distance: Distance, val duration: Duration)
 data class UserWithDistance(val userId: UserId, val distanceMessage: String)
@@ -21,26 +19,49 @@ data class UserWithDistance(val userId: UserId, val distanceMessage: String)
  * Subscribes to the command stream, where it listens for [NearbyDriversRequested] events. Upon receiving one,
  * finds the drivers and publishes [DriversLocated] event to the user-location stream.
  */
-@SpringBootApplication
+@Component
 class LocationService(
     @Value("\${googlemaps.api.key}") private val googleMapsApiKey: String,
-    private val streamsConfig: StreamsConfig,
+    private val kafkaConfig: KafkaStreamsConfig,
     private val userLocationRepository: UserLocationRepository
-) {
+) : Service {
+    val locationRequests = Topic("location-requests", Serdes.String(), CustomSerdes.commandSerde)
+    val availableDrivers = Topic("available-drivers", Serdes.String(), CustomSerdes.driversLocated)
+    private var streams: KafkaStreams? = null
+
+    override fun start() {
+        streams = buildStream().also { it.start() }
+    }
+
+    override fun stop() {
+        streams?.close()
+    }
+
     fun recordUserLocation(userLocation: UserLocation) {
         userLocationRepository.saveUserLocation(userLocation)
     }
 
-    fun processStreams(): KafkaStreams {
+    private fun buildStream(): KafkaStreams {
         val builder = StreamsBuilder()
-        val locationRequests = builder
-            .stream(locationRequests.name, Consumed.with(locationRequests.keySerde, locationRequests.valueSerde))
+
+        val locationRequests = builder.stream(
+            locationRequests.name,
+            Consumed.with(locationRequests.keySerde, locationRequests.valueSerde)
+        )
 
         locationRequests
-            .mapValues {location -> findDriversNear(location) }
-            .to(availableDrivers.name, Produced.with(availableDrivers.keySerde, availableDrivers.valueSerde))
+            .mapValues { request ->
+                DriversLocated(
+                    request.trackingId,
+                    findDriversNear(request.location)
+                )
+            }
+            .to(
+                availableDrivers.name,
+                Produced.with(availableDrivers.keySerde, availableDrivers.valueSerde)
+            )
 
-        return KafkaStreams(builder.build(), streamsConfig)
+        return KafkaStreams(builder.build(), kafkaConfig.props)
     }
 
 
@@ -70,27 +91,6 @@ class LocationService(
             .map { UserWithDistance(it.second.userId, "${it.first.duration.humanReadable} (${it.first.distance.humanReadable})") }
             .toList()
     }
-
-    companion object {
-        const val SERVICE_APP_ID = "LocationService"
-        val locationRequests = Topic("location-requests", Serdes.String(), CustomSerdes.LocationSerde())
-        val availableDrivers = Topic("available-drivers", Serdes.String(), CustomSerdes.UsersWithDistanceSerde())
-    }
-}
-
-
-@Configuration
-class ApConfig {
-    @Bean fun googleApiKey(@Value("\${googlemaps.api.key}") apiKey: String): String = apiKey
-
-    @Bean fun streamsConfig(@Value("\${kafka.bootstrap.servers}") bootstrapServers: String,
-                            @Value("\${kafka.state.dir}") stateDir: String,
-                            @Value("\${kafka.enableEOS}") enableEOS: Boolean): StreamsConfig =
-        createStreamsConfig(SERVICE_APP_ID, bootstrapServers, stateDir, enableEOS)
-}
-
-fun main(args: Array<String>) {
-    runApplication<LocationService>(*args)
 }
 
 

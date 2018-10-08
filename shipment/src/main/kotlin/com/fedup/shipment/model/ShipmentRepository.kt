@@ -1,6 +1,7 @@
 package com.fedup.shipment.model
 
 import com.fedup.common.*
+import com.fedup.common.machinery.*
 import org.apache.kafka.streams.*
 import org.springframework.stereotype.*
 
@@ -8,7 +9,7 @@ import org.springframework.stereotype.*
  * Sits on top of event-sourced view of shipment requests by location and shipment stream
  */
 @Component
-class ShipmentRepository(private val streamsConfig: StreamsConfig) {
+class ShipmentRepository(private val streamsConfig: KafkaStreamsConfig) {
 
     fun save(shipment: Shipment) {
         TODO("not implemented")
