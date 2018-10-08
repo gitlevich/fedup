@@ -1,8 +1,7 @@
 package com.fedup.shipment.model
 
-import com.fedup.common.*
-import com.fedup.common.machinery.*
-import org.apache.kafka.streams.*
+import com.fedup.shared.*
+import com.fedup.shared.machinery.*
 import org.springframework.stereotype.*
 
 /**

@@ -1,6 +1,6 @@
 package com.fedup.navigation
 
-import com.fedup.common.*
+import com.fedup.shared.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
 

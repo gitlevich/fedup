@@ -1,6 +1,6 @@
 package com.fedup.navigation
 
-import com.fedup.common.machinery.*
+import com.fedup.shared.machinery.*
 import org.springframework.beans.factory.annotation.*
 import org.springframework.boot.*
 import org.springframework.boot.autoconfigure.*

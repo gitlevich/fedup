@@ -1,6 +1,6 @@
 package com.fedup.shipment.model
 
-import com.fedup.common.*
+import com.fedup.shared.*
 import java.time.*
 
 data class Shipment internal constructor(

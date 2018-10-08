@@ -1,7 +1,7 @@
 package com.fedup.navigation
 
 import com.fasterxml.jackson.module.kotlin.*
-import com.fedup.common.*
+import com.fedup.shared.*
 
 val objectMapper = jacksonObjectMapper()
 

@@ -1,6 +1,6 @@
 package com.fedup.shipment.endpoints
 
-import com.fedup.common.*
+import com.fedup.shared.*
 import com.fedup.shipment.*
 import com.fedup.shipment.model.*
 import org.springframework.stereotype.*

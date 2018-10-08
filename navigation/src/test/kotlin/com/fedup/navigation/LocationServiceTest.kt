@@ -1,6 +1,6 @@
 package com.fedup.navigation
 
-import com.fedup.common.*
+import com.fedup.shared.*
 import com.salesforce.kafka.test.*
 import com.salesforce.kafka.test.junit4.*
 import org.assertj.core.api.Assertions.*

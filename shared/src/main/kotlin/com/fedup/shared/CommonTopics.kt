@@ -1,4 +1,4 @@
-package com.fedup.common
+package com.fedup.shared
 
 
 object CommonTopics {

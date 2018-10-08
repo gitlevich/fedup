@@ -1,4 +1,4 @@
-package com.fedup.common.machinery
+package com.fedup.shared.machinery
 
 import kotlin.concurrent.*
 

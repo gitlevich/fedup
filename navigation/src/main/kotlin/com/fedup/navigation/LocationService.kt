@@ -1,8 +1,8 @@
 package com.fedup.navigation
 
-import com.fedup.common.*
-import com.fedup.common.machinery.*
-import com.fedup.common.machinery.Service
+import com.fedup.shared.*
+import com.fedup.shared.machinery.*
+import com.fedup.shared.machinery.Service
 import com.google.maps.*
 import com.google.maps.model.*
 import org.apache.kafka.common.serialization.*
