@@ -38,7 +38,7 @@ import java.time.*
  *
  * - Workflow
  *  - shipper issues "requestShipmentPickup" command.
- *      Shipment is created in PICKUP_REQUESTED state.
+ *      Shipment is created in READY_FOR_PICKUP state.
  *  - a notification is published for receiver; he issues "acknowledgeUpcomingDelivery" command
  *      Shipment transitions to UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER state
  *  - event "NearbyDriversRequested" is published to "driverRequests" topic
@@ -74,25 +74,25 @@ class ShippingService(private val shipmentRepository: ShipmentRepository) {
 
     fun acknowledgeUpcomingDelivery(trackingId: TrackingId, receiver: Receiver, deliveryLocation: Location) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipment?.let { shipmentRepository.save(shipment.acknowledgedByReceiver(receiver, deliveryLocation)) }
+        shipment?.let { shipmentRepository.save(shipment.registerReceiverAcknowledgement(receiver, deliveryLocation)) }
             ?: UnknownShipmentException(trackingId)
     }
 
     fun acceptShipmentRequest(trackingId: TrackingId, driver: Driver, pickupLocation: Location) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipment?.let { shipmentRepository.save(shipment.assignedToDriver(driver, pickupLocation)) }
+        shipment?.let { shipmentRepository.save(shipment.assignToDriver(driver, pickupLocation)) }
             ?: UnknownShipmentException(trackingId)
     }
 
     fun reportPickup(trackingId: TrackingId, shipper: Shipper, driver: Driver, at: SpaceTimeCoordinates) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipment?.let { shipmentRepository.save(shipment.pickedUp(driver, shipper, at)) }
+        shipment?.let { shipmentRepository.save(shipment.registerPickup(driver, shipper, at)) }
             ?: UnknownShipmentException(trackingId)
     }
 
     fun confirmReceipt(trackingId: TrackingId, driver: Driver, receiver: Receiver, at: SpaceTimeCoordinates) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipment?.let { shipmentRepository.save(shipment.delivered(driver, receiver, at)) }
+        shipment?.let { shipmentRepository.save(shipment.registerDelivery(driver, receiver, at)) }
             ?: UnknownShipmentException(trackingId)
     }
 

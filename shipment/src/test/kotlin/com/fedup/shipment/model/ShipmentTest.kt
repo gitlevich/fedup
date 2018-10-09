@@ -18,25 +18,25 @@ class ShipmentTest {
 
     @Test
     fun `should be created in PICKUP_REQUESTED state`() {
-        assertThat(Shipment.newShipmentWith(routingSpec).state).isEqualTo(State.PICKUP_REQUESTED)
+        assertThat(Shipment.newShipmentWith(routingSpec).state).isEqualTo(State.READY_FOR_PICKUP)
     }
 
     @Test
     fun `should be created with a single shipment history record of type PICKUP_REQUESTED`() {
-        assertThat(Shipment.newShipmentWith(routingSpec).history).hasSize(1).allMatch { it.type == State.PICKUP_REQUESTED }
+        assertThat(Shipment.newShipmentWith(routingSpec).history).hasSize(1).allMatch { it.type == State.READY_FOR_PICKUP }
     }
 
     @Test
     fun `should transition to ASSIGNED_TO_DRIVER when a driver accepts it`() {
-        val shipment = Shipment.newShipmentWith(routingSpec).assignedToDriver(Driver("john@drivers.com"), aNicePlace)
+        val shipment = Shipment.newShipmentWith(routingSpec).assignToDriver(Driver("john@drivers.com"), aNicePlace)
         assertThat(shipment.state).isEqualTo(State.ASSIGNED_TO_DRIVER)
     }
 
     @Test
     fun `should have two history records after getting assigned to driver`() {
-        val shipment = Shipment.newShipmentWith(routingSpec).assignedToDriver(Driver("john@drivers.com"), aNicePlace)
+        val shipment = Shipment.newShipmentWith(routingSpec).assignToDriver(Driver("john@drivers.com"), aNicePlace)
         assertThat(shipment.history).hasSize(2)
-        assertThat(shipment.history[0]).matches { it.type == State.PICKUP_REQUESTED }
+        assertThat(shipment.history[0]).matches { it.type == State.READY_FOR_PICKUP }
         assertThat(shipment.history[1]).matches { it.type == State.ASSIGNED_TO_DRIVER }
     }
 
@@ -47,14 +47,14 @@ class ShipmentTest {
         val shipmentReadyForPickup = Shipment(
             trackingId,
             RoutingSpec(Shipper("shipper@shippers.com"), Receiver("receiver@receivers.com"), OffsetDateTime.parse("2018-10-11T17:00:00-00:08"), pickupLocation),
-            Shipment.State.PICKUP_REQUESTED,
-            listOf(ShipmentHistoryRecord(Shipment.State.PICKUP_REQUESTED, SpaceTimeCoordinates(pickupLocation)))
+            Shipment.State.READY_FOR_PICKUP,
+            listOf(ShipmentHistoryRecord(Shipment.State.READY_FOR_PICKUP, SpaceTimeCoordinates(pickupLocation)))
         )
         val deliveredShipment = Shipment(
             trackingId,
             RoutingSpec(Shipper("shipper@shippers.com"), Receiver("receiver@receivers.com"), OffsetDateTime.parse("2018-10-11T17:00:00-00:08"), pickupLocation),
             Shipment.State.DELIVERED,
-            listOf(ShipmentHistoryRecord(Shipment.State.PICKUP_REQUESTED, SpaceTimeCoordinates(pickupLocation)))
+            listOf(ShipmentHistoryRecord(Shipment.State.READY_FOR_PICKUP, SpaceTimeCoordinates(pickupLocation)))
         )
 
         assertThat(deliveredShipment).isEqualTo(shipmentReadyForPickup)
@@ -67,14 +67,14 @@ class ShipmentTest {
         val shipmentReadyForPickup = Shipment(
             trackingId,
             RoutingSpec(Shipper("shipper@shippers.com"), Receiver("receiver@receivers.com"), OffsetDateTime.parse("2018-10-11T17:00:00-00:08"), pickupLocation),
-            Shipment.State.PICKUP_REQUESTED,
-            listOf(ShipmentHistoryRecord(Shipment.State.PICKUP_REQUESTED, SpaceTimeCoordinates(pickupLocation)))
+            Shipment.State.READY_FOR_PICKUP,
+            listOf(ShipmentHistoryRecord(Shipment.State.READY_FOR_PICKUP, SpaceTimeCoordinates(pickupLocation)))
         )
         val deliveredShipment = Shipment(
             trackingId,
             RoutingSpec(Shipper("shipper@shippers.com"), Receiver("receiver@receivers.com"), OffsetDateTime.parse("2018-10-11T17:00:00-00:08"), pickupLocation),
             Shipment.State.DELIVERED,
-            listOf(ShipmentHistoryRecord(Shipment.State.PICKUP_REQUESTED, SpaceTimeCoordinates(pickupLocation)))
+            listOf(ShipmentHistoryRecord(Shipment.State.READY_FOR_PICKUP, SpaceTimeCoordinates(pickupLocation)))
         )
 
         assertThat(deliveredShipment.hashCode()).isEqualTo(shipmentReadyForPickup.hashCode())

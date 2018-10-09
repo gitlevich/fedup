@@ -5,6 +5,16 @@ import com.fedup.shared.Characterization.Entity
 import com.fedup.shared.protocol.location.*
 import java.time.*
 
+/**
+ * A Shipment plays the central role in Shipment Service. It is the root of the its own aggregate.
+ *
+ * Throughout its life, it transitions through several states, from READY_FOR_PICKUP to DELIVERED.
+ * Each transition is done via one of the methods that can be interpreted as commands.
+ *
+ * Shipment enforces its invariants, such as having a driver after it transitioned to ASSIGNED_TO_DRIVER
+ * state. It should also enforce its state transitions (e.g. by consulting with its state transition graph
+ * to see if requested transition is legal).
+ */
 data class Shipment internal constructor(
     val trackingId: TrackingId,
     val routingSpec: RoutingSpec,
@@ -14,21 +24,24 @@ data class Shipment internal constructor(
 ) : Entity<TrackingId>() {
     override val identity = trackingId
 
-    fun assignedToDriver(driver: Driver, pickupLocation: Location) =
+    fun assignToDriver(driver: Driver, pickupLocation: Location) =
         copy(driver = driver).transitionedTo(State.ASSIGNED_TO_DRIVER, pickupLocation.toSTC())
 
-    fun acknowledgedByReceiver(receiver: Receiver, deliveryLocation: Location) =
-        copy(routingSpec = routingSpec.copy(deliveryLocation = deliveryLocation))
-            .transitionedTo(State.UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, deliveryLocation.toSTC())
+    fun registerReceiverAcknowledgement(receiver: Receiver, deliveryLocation: Location) =
+        when (receiver) {
+            routingSpec.receiver -> copy(routingSpec = routingSpec.withDeliveryLocation(deliveryLocation))
+                .transitionedTo(State.UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, deliveryLocation.toSTC())
+            else                 -> throw ShipmentException("Acknowledged by unexpected receiver $receiver, expected ${routingSpec.receiver}")
+        }
 
-    fun pickedUp(driver: Driver, shipper: Shipper, at: SpaceTimeCoordinates) =
+    fun registerPickup(driver: Driver, shipper: Shipper, at: SpaceTimeCoordinates) =
         when {
             this.driver != driver          -> throw ShipmentException("Expected ${this.driver}, actual $driver")
             routingSpec.shipper != shipper -> throw ShipmentException("Expected ${routingSpec.shipper}, actual $shipper")
             else                           -> copy(driver = driver).transitionedTo(State.PICKED_UP_AND_ON_THE_WAY, at)
         }
 
-    fun delivered(driver: Driver, receiver: Receiver, at: SpaceTimeCoordinates) =
+    fun registerDelivery(driver: Driver, receiver: Receiver, at: SpaceTimeCoordinates) =
         when {
             this.driver != driver            -> throw ShipmentException("Expected ${this.driver}, actual $driver")
             routingSpec.receiver != receiver -> throw ShipmentException("Expected ${routingSpec.receiver}, actual $receiver")
@@ -39,7 +52,7 @@ data class Shipment internal constructor(
         copy(state = state).copy(history = history + ShipmentHistoryRecord(state, at))
 
     enum class State {
-        PICKUP_REQUESTED,
+        READY_FOR_PICKUP,
         UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER,
         ASSIGNED_TO_DRIVER,
         PICKED_UP_AND_ON_THE_WAY,
@@ -51,8 +64,8 @@ data class Shipment internal constructor(
             Shipment(
                 trackingId = TrackingId.next(),
                 routingSpec = routingSpec,
-                state = State.PICKUP_REQUESTED,
-                history = listOf(ShipmentHistoryRecord(State.PICKUP_REQUESTED, SpaceTimeCoordinates(routingSpec.originalPickupLocation)))
+                state = State.READY_FOR_PICKUP,
+                history = listOf(ShipmentHistoryRecord(State.READY_FOR_PICKUP, SpaceTimeCoordinates(routingSpec.originalPickupLocation)))
             )
     }
 }
@@ -70,7 +83,6 @@ data class RoutingSpec(
 }
 
 data class ShipmentHistoryRecord(val type: Shipment.State, val at: SpaceTimeCoordinates)
-
 
 
 fun Shipment.Companion.fromBytes(bytes: ByteArray): Shipment = objectMapper.readValue(bytes, Shipment::class.java)

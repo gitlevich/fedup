@@ -19,15 +19,15 @@ class ShipmentServiceTest {
     private val shipment = Shipment(
         TrackingId.next(),
         RoutingSpec(shipper, receiver, deliverBy, pickupLocation),
-        Shipment.State.PICKUP_REQUESTED,
-        listOf(ShipmentHistoryRecord(Shipment.State.PICKUP_REQUESTED, SpaceTimeCoordinates(pickupLocation)))
+        Shipment.State.READY_FOR_PICKUP,
+        listOf(ShipmentHistoryRecord(Shipment.State.READY_FOR_PICKUP, SpaceTimeCoordinates(pickupLocation)))
     )
 
     @Test
     fun `when shipper issues requestShipmentPickup command, a new Shipment is created in PICKUP_REQUESTED state`() {
         shippingService.requestShipmentPickup(shipper, pickupLocation, receiver, deliverBy)
 
-        verify(shipmentRepository, times(1)).save(argForWhich { state == Shipment.State.PICKUP_REQUESTED })
+        verify(shipmentRepository, times(1)).save(argForWhich { state == Shipment.State.READY_FOR_PICKUP })
     }
 
     @Test
@@ -46,7 +46,7 @@ class ShipmentServiceTest {
 
     @Test
     fun `when driver issues reportPickup command, the Shipment transitions to PICKED_UP_AND_ON_THE_WAY state`() {
-        val shipmentAssignedToDriver = shipment.assignedToDriver(driver, pickupLocation)
+        val shipmentAssignedToDriver = shipment.assignToDriver(driver, pickupLocation)
         given(shipmentRepository.findBy(shipment.trackingId)).willReturn(shipmentAssignedToDriver)
 
         shippingService.reportPickup(shipment.trackingId, shipper, driver, pickupLocation.toSTC())
@@ -56,7 +56,7 @@ class ShipmentServiceTest {
 
     @Test
     fun `when receiver issues confirmReceipt command, the Shipment transitions to DELIVERED state`() {
-        val shipmentAssignedToDriver = shipment.assignedToDriver(driver, pickupLocation)
+        val shipmentAssignedToDriver = shipment.assignToDriver(driver, pickupLocation)
         given(shipmentRepository.findBy(shipment.trackingId)).willReturn(shipmentAssignedToDriver)
 
         shippingService.confirmReceipt(shipment.trackingId, driver, receiver, deliveryLocation.toSTC())

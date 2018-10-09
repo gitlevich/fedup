@@ -3,7 +3,6 @@ package com.fedup.shipment
 import com.fedup.shared.*
 import com.fedup.shared.protocol.location.*
 import com.fedup.shipment.model.*
-import com.nhaarman.mockito_kotlin.*
 import org.junit.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.*
@@ -23,8 +22,8 @@ class ShipmentServiceIT {
     private val shipment = Shipment(
         TrackingId.next(),
         RoutingSpec(shipper, receiver, deliverBy, pickupLocation),
-        Shipment.State.PICKUP_REQUESTED,
-        listOf(ShipmentHistoryRecord(Shipment.State.PICKUP_REQUESTED, SpaceTimeCoordinates(pickupLocation)))
+        Shipment.State.READY_FOR_PICKUP,
+        listOf(ShipmentHistoryRecord(Shipment.State.READY_FOR_PICKUP, SpaceTimeCoordinates(pickupLocation)))
     )
 
     @Test

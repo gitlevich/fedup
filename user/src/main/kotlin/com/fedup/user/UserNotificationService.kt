@@ -1,7 +1,7 @@
 package com.fedup.user
 
 /**
- * Subscribes to user-notifications stream and pushes events from this stream to the users they are addressed to
+ * Subscribes to user-notifications stream and pushes received notifications to the users they are addressed to
  */
 class UserNotificationService {
 
