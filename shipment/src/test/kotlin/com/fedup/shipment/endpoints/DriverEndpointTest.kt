@@ -16,6 +16,7 @@ import org.springframework.test.context.junit4.*
 import org.springframework.test.web.servlet.*
 import org.springframework.test.web.servlet.request.*
 import org.springframework.test.web.servlet.result.*
+import java.lang.RuntimeException
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -37,8 +38,8 @@ class DriverEndpointTest {
     }
 
     @Test
-    fun `given shipment request is accepted for an unknown tracking number, 409 code is expected`() {
-        doAnswer { throw RuntimeException("42") }
+    fun `given shipment request is accepted for an unknown tracking number, 404 code is expected`() {
+        doAnswer { throw UnknownShipmentException(trackingId) }
             .whenever(shipmentFacade)
             .acceptShipmentRequest(trackingId, driver, location)
 
@@ -51,5 +52,14 @@ class DriverEndpointTest {
 
     @Test
     fun `given request fails with any other issue, 500 code is expected`() {
+        doAnswer { throw RuntimeException() }
+            .whenever(shipmentFacade)
+            .acceptShipmentRequest(trackingId, driver, location)
+
+        mvc.perform(MockMvcRequestBuilders.post("/shipment/${trackingId.value}/${driver.identity}")
+            .content(location.asJson())
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isInternalServerError)
     }
 }

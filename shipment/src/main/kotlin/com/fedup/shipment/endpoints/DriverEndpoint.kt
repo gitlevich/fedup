@@ -25,7 +25,12 @@ class DriverEndpoint(private val shipmentFacade: ShipmentFacade) {
 
     @ExceptionHandler
     fun handleException(e: Exception, response: HttpServletResponse) {
-        response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.message)
+        val status = when(e) {
+            is UnknownShipmentException -> HttpStatus.NOT_FOUND
+            else -> HttpStatus.INTERNAL_SERVER_ERROR
+        }.value()
+
+        response.sendError(status, e.message)
     }
 
 }
