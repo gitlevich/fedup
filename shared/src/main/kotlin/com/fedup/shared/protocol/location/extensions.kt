@@ -21,6 +21,11 @@ fun UserLocationChanged.Companion.fromString(string: String): UserLocationChange
 fun UserLocationChanged.asBytes(): ByteArray = objectMapper.writeValueAsBytes(this)
 fun UserLocationChanged.asString(): String = objectMapper.writeValueAsString(this)
 
+fun UserLocation.Companion.fromBytes(bytes: ByteArray): UserLocation = objectMapper.readValue(bytes, UserLocation::class.java)
+fun UserLocation.Companion.fromString(string: String): UserLocation = objectMapper.readValue(string, UserLocation::class.java)
+fun UserLocation.asBytes(): ByteArray = objectMapper.writeValueAsBytes(this)
+fun UserLocation.asString(): String = objectMapper.writeValueAsString(this)
+
 fun TrackingId.Companion.fromBytes(bytes: ByteArray): TrackingId = objectMapper.readValue(bytes, TrackingId::class.java)
 fun TrackingId.Companion.fromString(string: String): TrackingId = objectMapper.readValue(string, TrackingId::class.java)
 fun TrackingId.asBytes(): ByteArray = objectMapper.writeValueAsBytes(this)

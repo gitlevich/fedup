@@ -1,7 +1,7 @@
 package com.fedup.location
 
 import com.fedup.shared.machinery.*
-import com.fedup.shared.machinery.Service
+import com.fedup.shared.machinery.KafkaService
 import com.fedup.shared.protocol.Topics.availableDrivers
 import com.fedup.shared.protocol.Topics.locationRequests
 import com.fedup.shared.protocol.location.*
@@ -25,16 +25,18 @@ class LocationService(
     @Value("\${googlemaps.api.key}") private val googleMapsApiKey: String,
     private val kafkaConfig: KafkaStreamsConfig,
     private val userLocationRepository: UserLocationRepository
-) : Service {
+) : KafkaService {
     private var streams: KafkaStreams? = null
 
     override fun start() {
         streams = buildStream(kafkaConfig).also { it.start() }
+        userLocationRepository.start() // this is really weird, I need to find a better way to define streams... maybe repository is not a possible pattern here?
         logger.info("Started location service")
     }
 
     override fun stop() {
         streams?.close()
+        userLocationRepository.stop()
     }
 
     fun recordUserLocation(userLocation: UserLocation) {
@@ -69,7 +71,9 @@ class LocationService(
      * Finds at most max drivers closest to the specified location.
      */
     fun findDriversNear(location: Location, maxDriversToFind: Int = 5): List<UserWithDistance> {
-        val availableDrivers = userLocationRepository.findAvailableDrivers()
+        val availableDrivers = userLocationRepository.findAllDrivers()
+        if(availableDrivers.isEmpty()) return emptyList()
+
         val driverLocations = availableDrivers
             .map { it.location.toString() }
             .toTypedArray()

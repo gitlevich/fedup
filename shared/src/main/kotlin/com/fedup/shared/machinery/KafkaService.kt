@@ -2,13 +2,13 @@ package com.fedup.shared.machinery
 
 import kotlin.concurrent.*
 
-interface Service {
+interface KafkaService {
     fun start()
     fun stop()
 
 }
 
-fun addShutdownHook(service: Service) {
+fun addShutdownHook(service: KafkaService) {
     Thread.currentThread().setUncaughtExceptionHandler { _, _ -> service.stop() }
     Runtime.getRuntime().addShutdownHook(
         thread(

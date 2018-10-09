@@ -10,5 +10,6 @@ class Topic<K, V>(val name: String, val keySerde: Serde<K>, val valueSerde: Serd
 object Topics {
     val locationRequests = Topic("location-requests", LocationSerdes.trackingIdSerde, LocationSerdes.commandSerde)
     val availableDrivers = Topic("available-drivers", LocationSerdes.trackingIdSerde, LocationSerdes.driversLocated)
+    val userLocations = Topic("user-locations", Serdes.String(), LocationSerdes.userLocation)
 
 }

@@ -54,9 +54,6 @@ object LocationEventGenerator {
 }
 
 fun main(args: Array<String>) {
-    LocationEventGenerator.generateDriverRequests(TrackingId("444-433-222"), 3).forEach { println(it) }
-    LocationEventGenerator.generateDrivers(3).forEach { println(it) }
-
     val records = LocationEventGenerator.generateDriverRequests(TrackingId("444-433-222"), 3)
         .map { event -> ProducerRecord(Topics.locationRequests.name, event.trackingId, event) }
     send(records, Topics.locationRequests)

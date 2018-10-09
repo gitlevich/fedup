@@ -6,7 +6,7 @@ import java.time.*
 data class Location(val latitude: Double, val longitude: Double) {
     override fun toString(): String = "$latitude, $longitude"
 }
-data class UserLocation(val userId: UserId, val location: Location)
+data class UserLocation(val userId: UserId, val location: Location) { companion object }
 
 data class SpaceTimeCoordinates(val location: Location, val time: OffsetDateTime = OffsetDateTime.now())
 typealias STC = SpaceTimeCoordinates
