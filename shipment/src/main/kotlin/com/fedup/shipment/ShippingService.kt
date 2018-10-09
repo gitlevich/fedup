@@ -38,24 +38,20 @@ import java.time.*
  *
  * - Workflow
  *  - shipper issues "requestShipmentPickup" command.
- *    Shipment is created in PICKUP_REQUESTED state.
- *
+ *      Shipment is created in PICKUP_REQUESTED state.
  *  - a notification is published for receiver; he issues "acknowledgeUpcomingDelivery" command
- *    Shipment transitions to UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER state
- *
+ *      Shipment transitions to UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER state
  *  - event "NearbyDriversRequested" is published to "driverRequests" topic
  *  - event "DriversLocated" is published to "availableDrivers" topic
  *  - event "Notification" for the located drivers is published to "notifications" topic
  *  - a driver issues "acceptShipmentRequest" command
- *    Shipment transitions to ASSIGNED_TO_DRIVER state
- *
+ *      Shipment transitions to ASSIGNED_TO_DRIVER state
  *  - an event "Notification" is published to "notifications" topic to inform shipper of driver's ETA
  *  - driver issues "reportPickup" command upon getting the shipment from the shipper
- *    Shipment transitions to PICKED_UP_AND_ON_THE_WAY state
- *
+ *      Shipment transitions to PICKED_UP_AND_ON_THE_WAY state
  *  - event "Notification" is published to "notifications" topic to inform receiver of driver's ETA
  *  - receiver issues "confirmReceipt" command when driver hands him the shipment
- *    Shipment transitions to DELIVERED state
+ *      Shipment transitions to DELIVERED state
  */
 @Component
 class ShippingService(private val shipmentRepository: ShipmentRepository) {
@@ -76,15 +72,15 @@ class ShippingService(private val shipmentRepository: ShipmentRepository) {
     fun checkProgressFor(trackingId: TrackingId): List<ShipmentHistoryRecord>? =
         shipmentRepository.findBy(trackingId)?.history
 
-    fun acknowledgeUpcomingDelivery(trackingId: TrackingId, receiver: Receiver, location: Location) {
+    fun acknowledgeUpcomingDelivery(trackingId: TrackingId, receiver: Receiver, deliveryLocation: Location) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipment?.let { shipmentRepository.save(shipment.acknowledgedByReceiver(receiver, at = SpaceTimeCoordinates(location))) }
+        shipment?.let { shipmentRepository.save(shipment.acknowledgedByReceiver(receiver, deliveryLocation)) }
             ?: UnknownShipmentException(trackingId)
     }
 
-    fun acceptShipmentRequest(trackingId: TrackingId, driver: Driver, location: Location) {
+    fun acceptShipmentRequest(trackingId: TrackingId, driver: Driver, pickupLocation: Location) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipment?.let { shipmentRepository.save(shipment.assignedToDriver(driver, at = SpaceTimeCoordinates(location))) }
+        shipment?.let { shipmentRepository.save(shipment.assignedToDriver(driver, pickupLocation)) }
             ?: UnknownShipmentException(trackingId)
     }
 

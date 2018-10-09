@@ -14,12 +14,12 @@ data class Shipment internal constructor(
 ) : Entity<TrackingId>() {
     override val identity = trackingId
 
-    fun assignedToDriver(driver: Driver, at: SpaceTimeCoordinates) =
-        copy(driver = driver).transitionedTo(State.ASSIGNED_TO_DRIVER, at)
+    fun assignedToDriver(driver: Driver, pickupLocation: Location) =
+        copy(driver = driver).transitionedTo(State.ASSIGNED_TO_DRIVER, pickupLocation.toSTC())
 
-    fun acknowledgedByReceiver(receiver: Receiver, at: SpaceTimeCoordinates) =
-        copy(routingSpec = routingSpec.copy(deliveryLocation = at.place))
-            .transitionedTo(State.UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, at)
+    fun acknowledgedByReceiver(receiver: Receiver, deliveryLocation: Location) =
+        copy(routingSpec = routingSpec.copy(deliveryLocation = deliveryLocation))
+            .transitionedTo(State.UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, deliveryLocation.toSTC())
 
     fun pickedUp(driver: Driver, shipper: Shipper, at: SpaceTimeCoordinates) =
         when {

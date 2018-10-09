@@ -7,6 +7,9 @@ data class Location(val latitude: Double, val longitude: Double) {
     override fun toString(): String = "$latitude, $longitude"
 }
 
+fun Location.toSTC() = STC(this)
+fun Location.toSTC(at: OffsetDateTime) = STC(this, at)
+
 enum class UserRole { SHIPPER, DRIVER, RECEIVER }
 data class UserLocation(val userId: UserId, val coordinates: STC, val userRole: UserRole) { companion object }
 
