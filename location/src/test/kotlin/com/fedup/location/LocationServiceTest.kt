@@ -3,6 +3,7 @@ package com.fedup.location
 import com.fedup.shared.*
 import com.fedup.shared.machinery.*
 import com.fedup.shared.protocol.*
+import com.fedup.shared.protocol.location.*
 import org.apache.kafka.clients.producer.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
@@ -32,6 +33,16 @@ class LocationServiceTest {
             .anyMatch { it.key == trackingId }
     }
 
+
+    @Test
+    fun `should find stored user location`() {
+        val original = UserLocation("driver@drivers.com", STC(Location(37.7534327, -122.4344288)))
+        locationService.recordUserLocation(original)
+
+        val retrieved = locationService.locateUser(original.userId)
+        assertThat(retrieved).isEqualTo(original)
+    }
+
     /* * * * * * * * * * * * * * * * * *   M A C H I N E R Y   * * * * * * * * * * * * * * * * */
     @Autowired private lateinit var locationService: LocationService
     @Autowired private lateinit var kafkaConfig: KafkaStreamsConfig
@@ -39,6 +50,6 @@ class LocationServiceTest {
 
     @After
     fun tearDown() {
-        locationService.stop()
+        locationService.close()
     }
 }

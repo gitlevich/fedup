@@ -3,6 +3,7 @@ package com.fedup.location
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.datatype.jsr310.*
 import com.fedup.shared.machinery.*
+import org.apache.kafka.streams.*
 import org.springframework.beans.factory.annotation.*
 import org.springframework.boot.*
 import org.springframework.boot.autoconfigure.*
@@ -11,7 +12,6 @@ import org.springframework.context.annotation.*
 @SpringBootApplication
 class LocationServiceApp(locationService: LocationService) {
     init {
-        locationService.start()
         addShutdownHook(locationService)
     }
 }

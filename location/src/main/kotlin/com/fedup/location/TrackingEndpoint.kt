@@ -18,8 +18,9 @@ class TrackingEndpoint(private val locationService: LocationService) {
     @ExceptionHandler
     fun handleException(e: Exception, response: HttpServletResponse) {
         val status = when(e) {
-            is UserNotFoundException -> HttpStatus.NOT_FOUND
-            else -> HttpStatus.INTERNAL_SERVER_ERROR
+            is UserNotFound       -> HttpStatus.NOT_FOUND
+            is NoDriversAvailable -> HttpStatus.NOT_FOUND
+            else                  -> HttpStatus.INTERNAL_SERVER_ERROR
         }.value()
 
         response.sendError(status, e.message)

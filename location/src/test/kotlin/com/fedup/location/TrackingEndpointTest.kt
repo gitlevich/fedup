@@ -13,6 +13,7 @@ import org.springframework.test.context.junit4.*
 import org.springframework.test.web.servlet.*
 import org.springframework.test.web.servlet.request.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.lang.RuntimeException
 import java.time.*
 
 
@@ -29,7 +30,7 @@ class TrackingEndpointTest {
     )
 
     @Test
-    fun `given location is reported by existing user, 200 response is expected`() {
+    fun `given location is reported by existing user, 200 status is expected`() {
         mvc.perform(MockMvcRequestBuilders.post("/location/user")
             .content(userLocation.asJson())
             .contentType(MediaType.APPLICATION_JSON)
@@ -38,8 +39,8 @@ class TrackingEndpointTest {
     }
 
     @Test
-    fun `given location is reported by unknown user, not found response is expected`() {
-        doAnswer { throw UserNotFoundException("42") }
+    fun `given location is reported by unknown user, 404 status is expected`() {
+        doAnswer { throw UserNotFound("42") }
             .whenever(locationService)
             .recordUserLocation(any())
 
@@ -51,7 +52,15 @@ class TrackingEndpointTest {
     }
 
     @Test
-    fun name() {
-        println(userLocation.asJson())
+    fun `given no drivers are available, 404 status is expected`() {
+        doAnswer { throw NoDriversAvailable(RuntimeException("because something broke")) }
+            .whenever(locationService)
+            .recordUserLocation(any())
+
+        mvc.perform(MockMvcRequestBuilders.post("/location/user")
+            .content(userLocation.asJson())
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound)
     }
 }

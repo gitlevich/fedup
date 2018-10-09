@@ -6,11 +6,13 @@ import java.time.*
 data class Location(val latitude: Double, val longitude: Double) {
     override fun toString(): String = "$latitude, $longitude"
 }
-data class UserLocation(val userId: UserId, val location: STC) { companion object }
+data class UserLocation(val userId: UserId, val coordinates: STC) { companion object }
 
 data class SpaceTimeCoordinates(val place: Location, val time: OffsetDateTime = OffsetDateTime.now())
 typealias STC = SpaceTimeCoordinates
-data class UserWithDistance(val userId: UserId, val distanceMessage: String)
+
+data class DistanceInMeters(val distance: Long) { companion object }
+data class UserWithDistance(val userId: UserId, val distanceMessage: String, val distance: DistanceInMeters, val timeToTravel: Duration)
 
 sealed class LocationEvent
 

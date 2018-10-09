@@ -3,6 +3,7 @@ package com.fedup.shared.protocol.location
 import com.fedup.shared.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
+import java.time.*
 
 class LocationSerdesTest {
     private val topic = "blah"
@@ -21,7 +22,10 @@ class LocationSerdesTest {
     fun `should serialize DriversLocated and deserialize it back to the original`() {
         val original = DriversLocated(
             TrackingId("123"),
-            listOf(UserWithDistance("user1", "too far and too long"), UserWithDistance("user2", "even further and longer"))
+            listOf(
+                UserWithDistance("user1", "too far and too long", DistanceInMeters(1200), Duration.ofMinutes(10)),
+                UserWithDistance("user2", "even further and longer", DistanceInMeters(1480), Duration.ofMinutes(12))
+            )
         )
 
         val serialized = LocationSerdes.driversLocated.serializer().serialize(topic, original)
