@@ -15,9 +15,9 @@
     </properties>
 
     <modules>
-        <module>common</module>
+        <module>shared</module>
         <module>shipment</module>
-        <module>navigation</module>
+        <module>location</module>
         <module>user</module>
     </modules>
 

@@ -1,6 +1,7 @@
 package com.fedup.shipment
 
-import com.fedup.common.*
+import com.fedup.shared.*
+import com.fedup.shared.protocol.location.*
 import com.fedup.shipment.model.*
 import org.springframework.stereotype.*
 import java.time.*

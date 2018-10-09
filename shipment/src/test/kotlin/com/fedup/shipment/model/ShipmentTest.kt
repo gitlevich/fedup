@@ -1,6 +1,6 @@
 package com.fedup.shipment.model
 
-import com.fedup.common.*
+import com.fedup.shared.protocol.location.*
 import com.fedup.shipment.model.Shipment.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
