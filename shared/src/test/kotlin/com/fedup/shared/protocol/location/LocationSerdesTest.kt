@@ -1,7 +1,6 @@
 package com.fedup.shared.protocol.location
 
 import com.fedup.shared.*
-import com.fedup.shared.protocol.location.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
 
@@ -35,8 +34,8 @@ class LocationSerdesTest {
     fun `extensions should work`() {
         val original = NearbyDriversRequested(TrackingId("123"), Location(37.7724868, -122.4166086))
 
-        val serialized = original.asString()
-        val deserialized = NearbyDriversRequested.fromString(serialized)
+        val serialized = original.asJson()
+        val deserialized = NearbyDriversRequested.fromJson(serialized)
 
         assertThat(deserialized).isEqualTo(original).also { println(serialized) }
     }

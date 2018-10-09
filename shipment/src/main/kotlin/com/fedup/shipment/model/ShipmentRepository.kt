@@ -18,7 +18,7 @@ class ShipmentRepository(private val streamsConfig: KafkaStreamsConfig) {
         TODO("not implemented")
     }
 
-    fun findBy(trackingId: TrackingId): Shipment {
+    fun findBy(trackingId: TrackingId): Shipment? {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

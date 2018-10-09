@@ -5,9 +5,9 @@
 # * 'ptr' and 'ptrp' create a POST request with a simple or parameter-like body;
 # * 'mptr' and 'fptr' create a POST request to submit a form with a text or file field (multipart/form-data);
 
-POST http://localhost:8080/location/user
+POST http://localhost:8080/shipment/123-456-789/driver@drivers.com
 Content-Type: application/json
 
-{"userId":"someone@else.com","location":{"latitude":37.7724868,"longitude":-122.4166086}}
+{"latitude":37.7724868,"longitude":122.4166086}
 
 ###

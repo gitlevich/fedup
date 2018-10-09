@@ -14,6 +14,4 @@ class ShipmentFacadeTest {
     fun `ShipmentRequested should trigger`() {
         TODO("not implemented")
     }
-
-
 }

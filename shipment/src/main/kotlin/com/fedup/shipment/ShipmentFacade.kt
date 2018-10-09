@@ -26,17 +26,22 @@ class ShipmentFacade(private val shipmentRepository: ShipmentRepository) {
 
     fun acceptShipmentRequest(trackingId: TrackingId, driver: Driver, location: Location) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipmentRepository.save(shipment.assignedToDriver(driver, at = SpaceTimeCoordinates(location)))
+        shipment?.let { shipmentRepository.save(shipment.assignedToDriver(driver, at = SpaceTimeCoordinates(location))) }
+            ?: UnknownShipmentException(trackingId)
     }
 
     fun reportPickup(trackingId: TrackingId, shipper: Shipper, driver: Driver, at: SpaceTimeCoordinates) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipmentRepository.save(shipment.pickedUp(driver, shipper, at))
+        shipment?.let { shipmentRepository.save(shipment.pickedUp(driver, shipper, at)) }
+            ?: UnknownShipmentException(trackingId)
     }
 
     fun confirmReceipt(trackingId: TrackingId, driver: Driver, receiver: Receiver, at: SpaceTimeCoordinates) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipmentRepository.save(shipment.delivered(driver, receiver, at))
+        shipment?.let { shipmentRepository.save(shipment.delivered(driver, receiver, at)) }
+            ?: UnknownShipmentException(trackingId)
     }
 
 }
+
+class UnknownShipmentException(trackingId: TrackingId) : Exception("Unknown tracking id $trackingId")
