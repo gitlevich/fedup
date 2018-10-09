@@ -22,7 +22,7 @@ class ShipmentFacade(private val shipmentRepository: ShipmentRepository) {
         )
     }
 
-    fun checkProgressFor(trackingId: TrackingId): List<ShipmentHistoryRecord> = shipmentRepository.historyOfPackageWith(trackingId)
+    fun checkProgressFor(trackingId: TrackingId): List<ShipmentHistoryRecord>? = shipmentRepository.findBy(trackingId)?.history
 
     fun acceptShipmentRequest(trackingId: TrackingId, driver: Driver, location: Location) {
         val shipment = shipmentRepository.findBy(trackingId)

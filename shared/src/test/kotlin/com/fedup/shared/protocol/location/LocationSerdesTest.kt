@@ -37,6 +37,6 @@ class LocationSerdesTest {
         val serialized = original.asJson()
         val deserialized = NearbyDriversRequested.fromJson(serialized)
 
-        assertThat(deserialized).isEqualTo(original).also { println(serialized) }
+        assertThat(deserialized).isEqualTo(original)
     }
 }

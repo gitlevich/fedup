@@ -15,16 +15,11 @@ class UserLocationRepositoryTest {
 
     @Test
     fun `should find stored user location`() {
-        val original = UserLocation("driver@drivers.com", Location(37.7534327, -122.4344288))
+        val original = UserLocation("driver@drivers.com", STC(Location(37.7534327, -122.4344288)))
         userLocationRepository.saveUserLocation(original)
 
         val retrieved = userLocationRepository.findLocationFor(original.userId)
         assertThat(retrieved).isEqualTo(original)
-    }
-
-    @Before
-    fun setUp() {
-        userLocationRepository.start()
     }
 
     @After

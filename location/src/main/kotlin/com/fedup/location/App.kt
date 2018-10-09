@@ -1,5 +1,7 @@
 package com.fedup.location
 
+import com.fasterxml.jackson.databind.*
+import com.fasterxml.jackson.datatype.jsr310.*
 import com.fedup.shared.machinery.*
 import org.springframework.beans.factory.annotation.*
 import org.springframework.boot.*
@@ -15,7 +17,11 @@ class LocationServiceApp(locationService: LocationService) {
 }
 
 @Configuration
-class ApConfig {
+class ApConfig(objectMapper: ObjectMapper) {
+    init {
+        objectMapper.registerModule(JavaTimeModule())
+    }
+
     @Bean fun googleApiKey(@Value("\${googlemaps.api.key}") apiKey: String): String = apiKey
 
     @Bean fun streamsConfig(@Value("\${kafka.bootstrap.servers}") bootstrapServers: String,

@@ -7,9 +7,11 @@ import com.fedup.shared.protocol.location.*
 import org.apache.kafka.clients.producer.*
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.kstream.*
+import org.apache.kafka.streams.kstream.Materialized
 import org.apache.kafka.streams.state.*
 import org.slf4j.*
 import org.springframework.stereotype.*
+
 
 /**
  * Sits on top of user-location stream
@@ -28,13 +30,15 @@ class UserLocationRepository(private val kafkaConfig: KafkaStreamsConfig) : Kafk
 
     fun buildUserLocationsStream(): KafkaStreams {
         val builder = StreamsBuilder()
-        builder
-            .table(
-                userLocations.name,
-                Consumed.with(userLocations.keySerde, userLocations.valueSerde),
-                Materialized.`as`(userLocationStore)
-            )
-            .toStream()
+
+        builder.stream<String, UserLocation>(
+            userLocations.name,
+            Consumed.with(userLocations.keySerde, userLocations.valueSerde)
+        ).groupByKey()
+        .reduce(
+            {value1, value2 ->  value1},
+            Materialized.`as`(userLocationStore)
+        )
 
         return KafkaStreams(builder.build(), kafkaConfig.props)
     }
@@ -59,11 +63,13 @@ class UserLocationRepository(private val kafkaConfig: KafkaStreamsConfig) : Kafk
     }
 
     override fun start() {
+        logger.info("Starting streams")
         streams.start()
     }
 
     override fun stop() {
         streams.close()
+        logger.info("Streams closed")
     }
 
     override fun close() {

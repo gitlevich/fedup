@@ -14,10 +14,6 @@ class ShipmentRepository(private val streamsConfig: KafkaStreamsConfig) {
         TODO("not implemented")
     }
 
-    fun historyOfPackageWith(trackingId: TrackingId): List<ShipmentHistoryRecord> {
-        TODO("not implemented")
-    }
-
     fun findBy(trackingId: TrackingId): Shipment? {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

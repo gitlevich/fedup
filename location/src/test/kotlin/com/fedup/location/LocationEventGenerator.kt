@@ -15,7 +15,7 @@ object LocationEventGenerator {
     private val locationBounds = Location(37.7534327, -122.4344288) to Location(37.726768, -122.390035)
 
     fun generateDrivers(howMany: Int) =
-        (0..howMany).map { UserLocation("driver_${ThreadLocalRandom.current().nextInt(1, howMany * 10)}", randomLocationWithinBounds(locationBounds)) }
+        (0..howMany).map { UserLocation("driver_${ThreadLocalRandom.current().nextInt(1, howMany * 10)}", STC(randomLocationWithinBounds(locationBounds))) }
 
     fun generateDriverRequests(trackingId: TrackingId, howMany: Int): List<NearbyDriversRequested> =
         (0..howMany).map { NearbyDriversRequested(trackingId, randomLocationWithinBounds(locationBounds)) }

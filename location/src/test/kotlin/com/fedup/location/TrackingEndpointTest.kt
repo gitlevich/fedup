@@ -1,5 +1,6 @@
 package com.fedup.location
 
+import com.fedup.shared.protocol.location.*
 import com.nhaarman.mockito_kotlin.*
 import org.junit.*
 import org.junit.runner.*
@@ -12,6 +13,7 @@ import org.springframework.test.context.junit4.*
 import org.springframework.test.web.servlet.*
 import org.springframework.test.web.servlet.request.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.time.*
 
 
 @RunWith(SpringRunner::class)
@@ -21,10 +23,15 @@ class TrackingEndpointTest {
     @Autowired private lateinit var mvc: MockMvc
     @MockBean private lateinit var locationService: LocationService
 
+    private val userLocation = UserLocation(
+        "driver@drivers.com",
+        STC(Location(37.7724868, 122.4166086), OffsetDateTime.parse("2018-10-11T17:00:00-00:08"))
+    )
+
     @Test
     fun `given location is reported by existing user, 200 response is expected`() {
         mvc.perform(MockMvcRequestBuilders.post("/location/user")
-            .content("""{"userId":"1","location":{"latitude":37.7724868,"longitude":-122.4166086}}""")
+            .content(userLocation.asJson())
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk)
@@ -37,10 +44,14 @@ class TrackingEndpointTest {
             .recordUserLocation(any())
 
         mvc.perform(MockMvcRequestBuilders.post("/location/user")
-            .content("""{"userId":"1","location":{"latitude":37.7724868,"longitude":-122.4166086}}""")
+            .content(userLocation.asJson())
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound)
     }
 
+    @Test
+    fun name() {
+        println(userLocation.asJson())
+    }
 }

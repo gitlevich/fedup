@@ -1,9 +1,10 @@
 package com.fedup.shared.protocol.location
 
+import com.fasterxml.jackson.datatype.jsr310.*
 import com.fasterxml.jackson.module.kotlin.*
 import com.fedup.shared.*
 
-val objectMapper = jacksonObjectMapper()
+val objectMapper = jacksonObjectMapper().also { it.registerModule(JavaTimeModule()) }
 
 // Extensions fpr serialization/deserialization
 fun NearbyDriversRequested.Companion.fromBytes(bytes: ByteArray): NearbyDriversRequested = objectMapper.readValue(bytes, NearbyDriversRequested::class.java)
@@ -15,11 +16,6 @@ fun DriversLocated.Companion.fromBytes(bytes: ByteArray): DriversLocated = objec
 fun DriversLocated.Companion.fromJson(string: String): DriversLocated = objectMapper.readValue(string, DriversLocated::class.java)
 fun DriversLocated.asBytes(): ByteArray = objectMapper.writeValueAsBytes(this)
 fun DriversLocated.asJson(): String = objectMapper.writeValueAsString(this)
-
-fun UserLocationChanged.Companion.fromBytes(bytes: ByteArray): UserLocationChanged = objectMapper.readValue(bytes, UserLocationChanged::class.java)
-fun UserLocationChanged.Companion.fromJson(string: String): UserLocationChanged = objectMapper.readValue(string, UserLocationChanged::class.java)
-fun UserLocationChanged.asBytes(): ByteArray = objectMapper.writeValueAsBytes(this)
-fun UserLocationChanged.asJson(): String = objectMapper.writeValueAsString(this)
 
 fun UserLocation.Companion.fromBytes(bytes: ByteArray): UserLocation = objectMapper.readValue(bytes, UserLocation::class.java)
 fun UserLocation.Companion.fromJson(string: String): UserLocation = objectMapper.readValue(string, UserLocation::class.java)
