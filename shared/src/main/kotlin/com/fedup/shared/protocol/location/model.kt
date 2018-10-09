@@ -8,7 +8,7 @@ data class Location(val latitude: Double, val longitude: Double) {
 }
 data class UserLocation(val userId: UserId, val location: STC) { companion object }
 
-data class SpaceTimeCoordinates(val location: Location, val time: OffsetDateTime = OffsetDateTime.now())
+data class SpaceTimeCoordinates(val place: Location, val time: OffsetDateTime = OffsetDateTime.now())
 typealias STC = SpaceTimeCoordinates
 data class UserWithDistance(val userId: UserId, val distanceMessage: String)
 

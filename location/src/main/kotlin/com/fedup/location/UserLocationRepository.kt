@@ -35,10 +35,10 @@ class UserLocationRepository(private val kafkaConfig: KafkaStreamsConfig) : Kafk
             userLocations.name,
             Consumed.with(userLocations.keySerde, userLocations.valueSerde)
         ).groupByKey()
-        .reduce(
-            {value1, value2 ->  value1},
-            Materialized.`as`(userLocationStore)
-        )
+            .reduce(
+                { ul1, ul2 -> if (ul1.location.time.isAfter(ul2.location.time)) ul1 else ul2 },
+                Materialized.`as`(userLocationStore)
+            )
 
         return KafkaStreams(builder.build(), kafkaConfig.props)
     }
