@@ -13,7 +13,7 @@ import org.springframework.context.annotation.*
  * TODO create the topics it writes to (single-writer) and tables it uses; define its topics here instead of common
  */
 @SpringBootApplication
-class ShippingService
+class App
 
 @Configuration
 class ApConfig {
@@ -25,5 +25,5 @@ class ApConfig {
 }
 
 fun main(args: Array<String>) {
-    runApplication<ShippingService>(*args)
+    runApplication<App>(*args)
 }

@@ -22,8 +22,8 @@ class LocationServiceTest {
     fun `should publish DriversLocated event to available-drivers topic upon receiving NearbyDriversRequested`() {
         val driverRequests = LocationEventGenerator.generateDriverRequests(trackingId, 1)
         send(
-            driverRequests.map { event -> ProducerRecord(Topics.locationRequests.name, event.trackingId, event) },
-            Topics.locationRequests
+            driverRequests.map { event -> ProducerRecord(Topics.driverRequests.name, event.trackingId, event) },
+            Topics.driverRequests
         )
 
         val availableDriversEvents = readOne(Topics.availableDrivers, kafkaConfig.bootstrapServers)
@@ -36,7 +36,7 @@ class LocationServiceTest {
 
     @Test
     fun `should find stored user location`() {
-        val original = UserLocation("driver@drivers.com", STC(Location(37.7534327, -122.4344288)))
+        val original = UserLocation("driver@drivers.com", STC(Location(37.7534327, -122.4344288)), UserRole.DRIVER)
         locationService.recordUserLocation(original)
 
         val retrieved = locationService.locateUser(original.userId)

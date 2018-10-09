@@ -1,6 +1,7 @@
 package com.fedup.shipment.model
 
 import com.fedup.shared.*
+import com.fedup.shared.Characterization.Entity
 import com.fedup.shared.protocol.location.*
 import java.time.*
 
@@ -15,6 +16,10 @@ data class Shipment internal constructor(
 
     fun assignedToDriver(driver: Driver, at: SpaceTimeCoordinates) =
         copy(driver = driver).transitionedTo(State.ASSIGNED_TO_DRIVER, at)
+
+    fun acknowledgedByReceiver(receiver: Receiver, at: SpaceTimeCoordinates) =
+        copy(routingSpec = routingSpec.copy(deliveryLocation = at.place))
+            .transitionedTo(State.UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, at)
 
     fun pickedUp(driver: Driver, shipper: Shipper, at: SpaceTimeCoordinates) =
         when {
@@ -35,6 +40,7 @@ data class Shipment internal constructor(
 
     enum class State {
         PICKUP_REQUESTED,
+        UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER,
         ASSIGNED_TO_DRIVER,
         PICKED_UP_AND_ON_THE_WAY,
         DELIVERED
@@ -57,7 +63,17 @@ data class RoutingSpec(
     val shipper: Shipper,
     val receiver: Receiver,
     val deliverBy: OffsetDateTime,
-    val originalPickupLocation: Location
-)
+    val originalPickupLocation: Location,
+    val deliveryLocation: Location? = null
+) {
+    fun withDeliveryLocation(location: Location) = copy(deliveryLocation = location)
+}
 
 data class ShipmentHistoryRecord(val type: Shipment.State, val at: SpaceTimeCoordinates)
+
+
+
+fun Shipment.Companion.fromBytes(bytes: ByteArray): Shipment = objectMapper.readValue(bytes, Shipment::class.java)
+fun Shipment.Companion.fromJson(string: String): Shipment = objectMapper.readValue(string, Shipment::class.java)
+fun Shipment.asBytes(): ByteArray = objectMapper.writeValueAsBytes(this)
+fun Shipment.asJson(): String = objectMapper.writeValueAsString(this)

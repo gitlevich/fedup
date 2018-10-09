@@ -4,7 +4,7 @@ import com.fedup.shared.*
 import com.fedup.shared.machinery.*
 import com.fedup.shared.protocol.*
 import com.fedup.shared.protocol.Topics.availableDrivers
-import com.fedup.shared.protocol.Topics.locationRequests
+import com.fedup.shared.protocol.Topics.driverRequests
 import com.fedup.shared.protocol.Topics.userLocations
 import com.fedup.shared.protocol.location.*
 import org.apache.kafka.clients.producer.*
@@ -22,7 +22,7 @@ import java.time.*
  *   location and publishes [DriversLocated] events to available-drivers
  *
  * Owns (is a single writer to) both [userLocations] and [availableDrivers] streams.
- * Consumes from [locationRequests] topic
+ * Consumes from [driverRequests] topic to know when to look for drivers
  */
 @Component
 class LocationService(
@@ -108,8 +108,8 @@ class LocationService(
                 )
 
             val locationRequests = topology.stream(
-                locationRequests.name,
-                Consumed.with(locationRequests.keySerde, locationRequests.valueSerde)
+                driverRequests.name,
+                Consumed.with(driverRequests.keySerde, driverRequests.valueSerde)
             )
 
             locationRequests

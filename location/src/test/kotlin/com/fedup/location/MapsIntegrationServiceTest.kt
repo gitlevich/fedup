@@ -55,11 +55,11 @@ class MapsIntegrationServiceTest {
     }
 
     companion object {
-        private val jane = UserLocation("jane@hotmail.com", STC(Location(37.7534327, -122.4344288)))
-        private val vlad = UserLocation("vlad@xaoc.com", STC(Location(37.726768, -122.390035)))
-        private val john = UserLocation("john@gmail.com", STC(Location(37.7124351, -122.3916016)))
-        private val arnold = UserLocation("arnold@governator.org", STC(Location(37.7824834, -121.4146101)))
-        private val elon = UserLocation("elon@tesla.com", STC(Location(38.4985740, -121.7593756)))
+        private val jane = UserLocation("jane@hotmail.com", STC(Location(37.7534327, -122.4344288)), UserRole.DRIVER)
+        private val vlad = UserLocation("vlad@xaoc.com", STC(Location(37.726768, -122.390035)), UserRole.DRIVER)
+        private val john = UserLocation("john@gmail.com", STC(Location(37.7124351, -122.3916016)), UserRole.DRIVER)
+        private val arnold = UserLocation("arnold@governator.org", STC(Location(37.7824834, -121.4146101)), UserRole.DRIVER)
+        private val elon = UserLocation("elon@tesla.com", STC(Location(38.4985740, -121.7593756)), UserRole.DRIVER)
 
         private val fiveUsers = listOf(jane, vlad, john, arnold, elon)
     }

@@ -26,7 +26,8 @@ class TrackingEndpointTest {
 
     private val userLocation = UserLocation(
         "driver@drivers.com",
-        STC(Location(37.7724868, 122.4166086), OffsetDateTime.parse("2018-10-11T17:00:00-00:08"))
+        STC(Location(37.7724868, 122.4166086), OffsetDateTime.parse("2018-10-11T17:00:00-00:08")),
+        UserRole.DRIVER
     )
 
     @Test

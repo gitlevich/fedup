@@ -23,7 +23,7 @@ import java.lang.RuntimeException
 @AutoConfigureMockMvc
 class DriverEndpointTest {
     @Autowired private lateinit var mvc: MockMvc
-    @MockBean private lateinit var shipmentFacade: ShipmentFacade
+    @MockBean private lateinit var shippingService: ShippingService
     private val trackingId = TrackingId("123-456-789")
     private val driver = Driver("driver@drivers.com")
     private val location = Location(37.7724868, 122.4166086)
@@ -40,7 +40,7 @@ class DriverEndpointTest {
     @Test
     fun `given shipment request is accepted for an unknown tracking number, 404 code is expected`() {
         doAnswer { throw UnknownShipmentException(trackingId) }
-            .whenever(shipmentFacade)
+            .whenever(shippingService)
             .acceptShipmentRequest(trackingId, driver, location)
 
         mvc.perform(MockMvcRequestBuilders.post("/shipment/${trackingId.value}/${driver.identity}")
@@ -53,7 +53,7 @@ class DriverEndpointTest {
     @Test
     fun `given request fails with any other issue, 500 code is expected`() {
         doAnswer { throw RuntimeException() }
-            .whenever(shipmentFacade)
+            .whenever(shippingService)
             .acceptShipmentRequest(trackingId, driver, location)
 
         mvc.perform(MockMvcRequestBuilders.post("/shipment/${trackingId.value}/${driver.identity}")

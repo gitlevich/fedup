@@ -5,7 +5,7 @@ import com.fedup.shared.machinery.*
 import org.springframework.stereotype.*
 
 /**
- * Sits on top of event-sourced view of shipment requests by location and shipment stream
+ * Sits on top of a view of shipment requests by trackingId event-sourced from shipments stream
  */
 @Component
 class ShipmentRepository(private val streamsConfig: KafkaStreamsConfig) {
@@ -15,6 +15,6 @@ class ShipmentRepository(private val streamsConfig: KafkaStreamsConfig) {
     }
 
     fun findBy(trackingId: TrackingId): Shipment? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 }

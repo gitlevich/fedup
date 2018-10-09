@@ -28,6 +28,9 @@ data class KafkaStreamsConfig(val props: Properties) {
 }
 
 
+/**
+ * Stolen from Confluent people
+ */
 class CustomRocksDBConfig : RocksDBConfigSetter {
 
     override fun setConfig(storeName: String, options: Options,

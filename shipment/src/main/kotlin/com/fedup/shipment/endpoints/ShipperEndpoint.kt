@@ -10,7 +10,7 @@ import java.time.*
 // TODO expose as a REST endpoint
 @Component
 class ShipperEndpoint(
-    private val shipmentFacade: ShipmentFacade
+    private val shippingService: ShippingService
 ) {
 
     /**
@@ -20,5 +20,5 @@ class ShipperEndpoint(
     fun requestShipmentPickup(from: Shipper, at: Location, to: Receiver, deliverBy: OffsetDateTime) {
     }
 
-    fun checkProgressFor(trackingId: TrackingId): List<ShipmentHistoryRecord>? = shipmentFacade.checkProgressFor(trackingId)
+    fun checkProgressFor(trackingId: TrackingId): List<ShipmentHistoryRecord>? = shippingService.checkProgressFor(trackingId)
 }

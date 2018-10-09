@@ -15,7 +15,7 @@ object LocationEventGenerator {
     private val locationBounds = Location(37.7534327, -122.4344288) to Location(37.726768, -122.390035)
 
     fun generateDrivers(howMany: Int) =
-        (0..howMany).map { UserLocation("driver_${ThreadLocalRandom.current().nextInt(1, howMany * 10)}", STC(randomLocationWithinBounds(locationBounds))) }
+        (0..howMany).map { UserLocation("driver_${ThreadLocalRandom.current().nextInt(1, howMany * 10)}", STC(randomLocationWithinBounds(locationBounds)), UserRole.DRIVER) }
 
     fun generateDriverRequests(trackingId: TrackingId, howMany: Int): List<NearbyDriversRequested> =
         (0..howMany).map { NearbyDriversRequested(trackingId, randomLocationWithinBounds(locationBounds)) }
@@ -24,8 +24,8 @@ object LocationEventGenerator {
         val builder = StreamsBuilder()
 
         builder.stream(
-            Topics.locationRequests.name,
-            Consumed.with(Topics.locationRequests.keySerde, Topics.locationRequests.valueSerde)
+            Topics.driverRequests.name,
+            Consumed.with(Topics.driverRequests.keySerde, Topics.driverRequests.valueSerde)
         )
 
         return KafkaStreams(builder.build(), createStreamsConfig(
@@ -55,7 +55,7 @@ object LocationEventGenerator {
 
 fun main(args: Array<String>) {
     val records = LocationEventGenerator.generateDriverRequests(TrackingId("444-433-222"), 3)
-        .map { event -> ProducerRecord(Topics.locationRequests.name, event.trackingId, event) }
-    send(records, Topics.locationRequests)
+        .map { event -> ProducerRecord(Topics.driverRequests.name, event.trackingId, event) }
+    send(records, Topics.driverRequests)
 }
 

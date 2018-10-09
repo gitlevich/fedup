@@ -10,11 +10,11 @@ import javax.servlet.http.*
 
 @RestController
 @RequestMapping("shipment")
-class DriverEndpoint(private val shipmentFacade: ShipmentFacade) {
+class DriverEndpoint(private val shippingService: ShippingService) {
 
     @PostMapping("/{tracking-id}/{user-id}")
     fun acceptShipmentRequest(@PathVariable("tracking-id") trackingId: String, @PathVariable("user-id") driverId: UserId, @RequestBody location: Location) {
-        shipmentFacade.acceptShipmentRequest(TrackingId(trackingId), Driver(driverId), location)
+        shippingService.acceptShipmentRequest(TrackingId(trackingId), Driver(driverId), location)
     }
 
     fun reportPickup(trackingId: TrackingId, driver: Driver, at: SpaceTimeCoordinates) {
