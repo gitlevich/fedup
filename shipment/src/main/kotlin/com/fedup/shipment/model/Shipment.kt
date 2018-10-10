@@ -3,6 +3,7 @@ package com.fedup.shipment.model
 import com.fedup.shared.*
 import com.fedup.shared.Characterization.Entity
 import com.fedup.shared.protocol.location.*
+import com.fedup.shipment.model.Shipment.State.*
 import java.time.*
 
 /**
@@ -25,52 +26,70 @@ data class Shipment internal constructor(
     override val identity = trackingId
 
     fun assignToDriver(driver: Driver, pickupLocation: Location) =
-        copy(driver = driver).transitionedTo(State.ASSIGNED_TO_DRIVER, pickupLocation.toSTC())
+        copy(driver = driver).transitionedTo(ASSIGNED_TO_DRIVER, pickupLocation.toSTC())
 
     fun registerReceiverAcknowledgement(receiver: Receiver, deliveryLocation: Location) =
         when (receiver) {
             routingSpec.receiver -> copy(routingSpec = routingSpec.withDeliveryLocation(deliveryLocation))
-                .transitionedTo(State.UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, deliveryLocation.toSTC())
+                .transitionedTo(UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, deliveryLocation.toSTC())
             else                 -> throw ShipmentException("Acknowledged by unexpected receiver $receiver, expected ${routingSpec.receiver}")
         }
 
-    fun registerPickup(driver: Driver, shipper: Shipper, at: SpaceTimeCoordinates) =
+    fun registerPickup(driver: Driver, shipper: Shipper, pickupLocation: Location) =
         when {
-            this.driver != driver          -> throw ShipmentException("Expected ${this.driver}, actual $driver")
+            isUnexpectedDriver(driver)    -> throw ShipmentException("Expected ${this.driver}, actual $driver")
             routingSpec.shipper != shipper -> throw ShipmentException("Expected ${routingSpec.shipper}, actual $shipper")
-            else                           -> copy(driver = driver).transitionedTo(State.PICKED_UP_AND_ON_THE_WAY, at)
+            else                           -> copy(driver = driver).transitionedTo(PICKED_UP_AND_ON_THE_WAY, pickupLocation.toSTC())
         }
+
+    private fun isUnexpectedDriver(driver: Driver) = this.driver != null && this.driver != driver
 
     fun registerDelivery(driver: Driver, receiver: Receiver, at: SpaceTimeCoordinates) =
         when {
-            this.driver != driver            -> throw ShipmentException("Expected ${this.driver}, actual $driver")
+            isUnexpectedDriver(driver)      -> throw ShipmentException("Expected ${this.driver}, actual $driver")
             routingSpec.receiver != receiver -> throw ShipmentException("Expected ${routingSpec.receiver}, actual $receiver")
-            else                             -> copy(driver = driver).transitionedTo(State.DELIVERED, at)
+            else                             -> copy(driver = driver).transitionedTo(DELIVERED, at)
         }
 
-    private fun transitionedTo(state: State, at: SpaceTimeCoordinates) =
-        copy(state = state).copy(history = history + ShipmentHistoryRecord(state, at))
+    private fun transitionedTo(newState: State, at: SpaceTimeCoordinates) =
+        if (isStateTransitionAllowed(state, newState))
+            copy(state = newState).copy(history = history + ShipmentHistoryRecord(newState, at))
+        else
+            throw IllegalStateTransitionRequested(state, newState)
 
     enum class State {
         READY_FOR_PICKUP,
         UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER,
         ASSIGNED_TO_DRIVER,
         PICKED_UP_AND_ON_THE_WAY,
-        DELIVERED
+        DELIVERED,
+        EXCEPTION
     }
 
     companion object {
+        private val allowedStateTransitions = mapOf(
+            READY_FOR_PICKUP to setOf(UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, EXCEPTION),
+            UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER to setOf(ASSIGNED_TO_DRIVER, EXCEPTION),
+            ASSIGNED_TO_DRIVER to setOf(PICKED_UP_AND_ON_THE_WAY, EXCEPTION),
+            PICKED_UP_AND_ON_THE_WAY to setOf(DELIVERED, EXCEPTION)
+        )
+
         fun newShipmentWith(routingSpec: RoutingSpec): Shipment =
             Shipment(
                 trackingId = TrackingId.next(),
                 routingSpec = routingSpec,
-                state = State.READY_FOR_PICKUP,
-                history = listOf(ShipmentHistoryRecord(State.READY_FOR_PICKUP, SpaceTimeCoordinates(routingSpec.originalPickupLocation)))
+                state = READY_FOR_PICKUP,
+                history = listOf(ShipmentHistoryRecord(READY_FOR_PICKUP, SpaceTimeCoordinates(routingSpec.originalPickupLocation)))
             )
+
+        fun isStateTransitionAllowed(currentState: State, nextState: State) =
+            allowedStateTransitions[currentState]?.contains(nextState) ?: false
     }
 }
 
-class ShipmentException(message: String) : Exception(message)
+open class ShipmentException(message: String) : Exception(message)
+class IllegalStateTransitionRequested(from: Shipment.State, to: Shipment.State) :
+    ShipmentException("Illegal state transition requested: $from->$to")
 
 data class RoutingSpec(
     val shipper: Shipper,
@@ -86,6 +105,4 @@ data class ShipmentHistoryRecord(val type: Shipment.State, val at: SpaceTimeCoor
 
 
 fun Shipment.Companion.fromBytes(bytes: ByteArray): Shipment = objectMapper.readValue(bytes, Shipment::class.java)
-fun Shipment.Companion.fromJson(string: String): Shipment = objectMapper.readValue(string, Shipment::class.java)
 fun Shipment.asBytes(): ByteArray = objectMapper.writeValueAsBytes(this)
-fun Shipment.asJson(): String = objectMapper.writeValueAsString(this)

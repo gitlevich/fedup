@@ -84,9 +84,9 @@ class ShippingService(private val shipmentRepository: ShipmentRepository) {
             ?: UnknownShipmentException(trackingId)
     }
 
-    fun reportPickup(trackingId: TrackingId, shipper: Shipper, driver: Driver, at: SpaceTimeCoordinates) {
+    fun reportPickup(trackingId: TrackingId, shipper: Shipper, driver: Driver, pickupLocation: Location) {
         val shipment = shipmentRepository.findBy(trackingId)
-        shipment?.let { shipmentRepository.save(shipment.registerPickup(driver, shipper, at)) }
+        shipment?.let { shipmentRepository.save(shipment.registerPickup(driver, shipper, pickupLocation)) }
             ?: UnknownShipmentException(trackingId)
     }
 

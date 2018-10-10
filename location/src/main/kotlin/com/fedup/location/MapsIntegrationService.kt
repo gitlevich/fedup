@@ -38,12 +38,14 @@ class MapsIntegrationService(@Value("\${googlemaps.api.key}") private val google
             .asSequence()
             .sortedBy { it.first.duration.inSeconds }
             .take(limit)
-            .map { UserWithDistance(
-                it.second.userId,
-                "${it.first.duration.humanReadable} (${it.first.distance.humanReadable})",
-                DistanceInMeters(it.first.distance.inMeters),
-                java.time.Duration.ofSeconds(it.first.duration.inSeconds)
-            ) }
+            .map {
+                UserWithDistance(
+                    it.second.userId,
+                    "${it.first.duration.humanReadable} (${it.first.distance.humanReadable})",
+                    DistanceInMeters(it.first.distance.inMeters),
+                    java.time.Duration.ofSeconds(it.first.duration.inSeconds)
+                )
+            }
             .toList()
     }
 }

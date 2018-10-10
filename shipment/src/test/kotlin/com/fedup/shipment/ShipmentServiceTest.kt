@@ -49,7 +49,7 @@ class ShipmentServiceTest {
         val shipmentAssignedToDriver = shipment.assignToDriver(driver, pickupLocation)
         given(shipmentRepository.findBy(shipment.trackingId)).willReturn(shipmentAssignedToDriver)
 
-        shippingService.reportPickup(shipment.trackingId, shipper, driver, pickupLocation.toSTC())
+        shippingService.reportPickup(shipment.trackingId, shipper, driver, pickupLocation)
 
         verify(shipmentRepository, times(1)).save(argForWhich { state == Shipment.State.PICKED_UP_AND_ON_THE_WAY })
     }

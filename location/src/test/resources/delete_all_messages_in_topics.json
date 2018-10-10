@@ -1,0 +1,20 @@
+{
+  "partitions": [
+    {
+      "topic": "user-locations",
+      "partition": 0,
+      "offset": 5
+    },
+    {
+      "topic": "driver-requests",
+      "partition": 0,
+      "offset": 20
+    },
+    {
+      "topic": "available-drivers",
+      "partition": 0,
+      "offset": 10
+    }
+  ],
+  "version": 1
+}

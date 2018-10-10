@@ -1,0 +1,1 @@
+kafka-console-consumer --topic available-drivers --from-beginning --bootstrap-server localhost:29092 --property print.key=true --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
