@@ -44,6 +44,10 @@ class CustomRocksDBConfig : RocksDBConfigSetter {
     }
 }
 
+fun <K, V> sendOne(records: ProducerRecord<K, V>, topic: Topic<K, V>) {
+    send(listOf(records), topic)
+}
+
 fun <K, V> send(records: List<ProducerRecord<K, V>>, topic: Topic<K, V>) {
     KafkaProducer(
         createStreamsConfig(

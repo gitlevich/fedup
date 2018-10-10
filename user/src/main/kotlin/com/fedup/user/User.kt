@@ -1,6 +1,6 @@
 package com.fedup.user
 
-import org.dddcommunity.Entity
+import com.fedup.shared.Entity
 
 data class Address(val street: String, val city: String, val state: String, val zip: String)
 data class EmailAddress(val address: String)
@@ -10,7 +10,7 @@ data class User(
     val name: String,
     val address: Address,
     val paymentMethod: PaymentMethod
-): Entity<EmailAddress> {
+): Entity<EmailAddress>() {
     override val identity = email
 }
 

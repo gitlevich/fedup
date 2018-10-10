@@ -11,7 +11,10 @@ fun Location.toSTC() = STC(this)
 fun Location.toSTC(at: OffsetDateTime) = STC(this, at)
 
 enum class UserRole { SHIPPER, DRIVER, RECEIVER }
-data class UserLocation(val userId: UserId, val coordinates: STC, val userRole: UserRole) { companion object }
+data class UserLocation(val userId: UserId, val coordinates: STC, val userRole: UserRole) {
+    constructor(userId: UserId, location: Location, userRole: UserRole): this(userId, location.toSTC(), userRole)
+    companion object
+}
 
 data class SpaceTimeCoordinates(val place: Location, val time: OffsetDateTime = OffsetDateTime.now())
 typealias STC = SpaceTimeCoordinates

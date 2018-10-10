@@ -93,15 +93,17 @@ There are three independent applications that communicate via Kafka and expose R
   - responsible for user registration, notification, etc. Not quite thought through yet, just sketched out. At the moment, it's
     supposed to also deal with payments, but I think these need to move to another service: very different responsibilities.
 
-- to build, run `mvn clean install` in project root. This will build 3 executable jars, one for each service. The jars are:
+#### How to build and run
+- In order for the integration tests to work, you need Kafka broker and Zookeeper running on localhost (the services expect 
+  Kafka broker on localhost:29092). Executing `docker-compose -f docker-compose.yml up` will start them up. However, I have not 
+  been able to get my services to connect to the broker running in this container on my mac (using a machine-local setup).   
+- to build, run `mvn clean install` in project root. This will produce 3 executable jars, one for each service. The jars are:
    - location/target/location-0.0.1-SNAPSHOT.jar
    - shipment/target/shipment-0.0.1-SNAPSHOT.jar
    - user/target/user-0.0.1-SNAPSHOT.jar
 - they can be run as `java -jar location/target/location-0.0.1-SNAPSHOT.jar` from project root (substitute `location` 
   with the service name you want)
-- you can try to run `docker-compose -f docker-compose.yml up` to start Kafka and Zookeeper. It will start the services, 
-  however I have not been able to get my services to connect to the broker running in container.   
-- at the moment, none of them really do anything useful, partially because not much is implemented, and partially because of Kafka woes.
+- at the moment, none of the services really do anything useful, partially because not much is implemented, and partially because of Kafka woes.
   You can report a location to the Location service (see above) and then see it published on a Kafka topic by running<br/>
   `kafka-console-consumer --topic user-locations --from-beginning --bootstrap-server localhost:29092 --property print.key=true --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer`,<br/> 
   that's about it 

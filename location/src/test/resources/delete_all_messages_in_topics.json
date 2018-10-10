@@ -3,17 +3,17 @@
     {
       "topic": "user-locations",
       "partition": 0,
-      "offset": 5
+      "offset": 11
     },
     {
       "topic": "driver-requests",
       "partition": 0,
-      "offset": 20
+      "offset": 17
     },
     {
       "topic": "available-drivers",
       "partition": 0,
-      "offset": 10
+      "offset": 0
     }
   ],
   "version": 1
