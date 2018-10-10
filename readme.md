@@ -100,7 +100,7 @@ There are three independent applications that communicate via Kafka and expose R
 - they can be run as `java -jar location/target/location-0.0.1-SNAPSHOT.jar` from project root (substitute `location` 
   with the service name you want)
 - you can try to run `docker-compose -f docker-compose.yml up` to start Kafka and Zookeeper. It will start the services, 
-  however I have not been able to get my services to connect to the broker running in container (more Kafka woes).   
+  however I have not been able to get my services to connect to the broker running in container.   
 - at the moment, none of them really do anything useful, partially because not much is implemented, and partially because of Kafka woes.
   You can report a location to the Location service (see above) and then see it published on a Kafka topic by running<br/>
   `kafka-console-consumer --topic user-locations --from-beginning --bootstrap-server localhost:29092 --property print.key=true --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer`,<br/> 
