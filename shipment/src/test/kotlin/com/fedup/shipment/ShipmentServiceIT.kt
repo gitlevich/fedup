@@ -3,6 +3,7 @@ package com.fedup.shipment
 import com.fedup.shared.*
 import com.fedup.shared.protocol.location.*
 import com.fedup.shipment.model.*
+import com.nhaarman.mockito_kotlin.*
 import org.junit.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.*
@@ -19,17 +20,10 @@ class ShipmentServiceIT {
     private val receiver = Receiver("receiver@receivers.com")
     private val pickupLocation = Location(37.7534327, -122.4344288)
     private val deliverBy = OffsetDateTime.parse("2018-10-11T17:00:00-00:08")
-    private val shipment = Shipment(
-        TrackingId.next(),
-        RoutingSpec(shipper, receiver, deliverBy, pickupLocation),
-        Shipment.State.READY_FOR_PICKUP,
-        listOf(ShipmentHistoryRecord(Shipment.State.READY_FOR_PICKUP, SpaceTimeCoordinates(pickupLocation)))
-    )
+    private lateinit var shipment: Shipment
 
     @Test
     fun `when shipper issues requestShipmentPickup command, a new Shipment is created in PICKUP_REQUESTED state`() {
-        shippingService.requestShipmentPickup(shipper, pickupLocation, receiver, deliverBy)
-
         TODO("Not implemented")
     }
 
@@ -72,4 +66,16 @@ class ShipmentServiceIT {
     fun `when receiver issues confirmReceipt command, the Shipment transitions to DELIVERED state`() {
         TODO("Not implemented")
     }
+
+
+    @Before
+    fun setUp() {
+        shipment = Shipment(
+            TrackingId.next(),
+            RoutingSpec(shipper, receiver, deliverBy, pickupLocation),
+            Shipment.State.READY_FOR_PICKUP,
+            listOf(ShipmentHistoryRecord(Shipment.State.READY_FOR_PICKUP, SpaceTimeCoordinates(pickupLocation)))
+        )
+    }
+
 }
