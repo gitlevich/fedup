@@ -8,6 +8,6 @@
 POST http://localhost:8080/location/user
 Content-Type: application/json
 
-{"userId":"someone@else.com","location":{"latitude":37.7724868,"longitude":-122.4166086}}
+{"userId":"jane@hotmail.com","coordinates":{"place":{"latitude":37.7534329,"longitude":-122.4344287},"time":1539143909.793000000},"userRole":"DRIVER"}
 
 ###

@@ -12,15 +12,16 @@ import javax.servlet.http.*
 @RequestMapping("shipment")
 class DriverEndpoint(private val shippingService: ShippingService) {
 
-    @PostMapping("/{tracking-id}/{user-id}")
-    fun acceptShipmentRequest(@PathVariable("tracking-id") trackingId: String, @PathVariable("user-id") driverId: UserId, @RequestBody location: Location) {
+    // FIXME this business with very complicated REST endpoints doesn't work. Just convert everything except /{tracking-id} to JSON and send it as request body
+    @PostMapping("/{tracking-id}/driver/{driver-id}/accept")
+    fun acceptShipmentRequest(@PathVariable("tracking-id") trackingId: String, @PathVariable("driver-id") driverId: UserId, @RequestBody location: Location) {
         shippingService.acceptShipmentRequest(TrackingId(trackingId), Driver(driverId), location)
     }
 
-    fun reportPickup(trackingId: TrackingId, driver: Driver, at: SpaceTimeCoordinates) {
-    }
-
-    fun reportHandOff(trackingId: TrackingId, acceptedBy: Driver, at: SpaceTimeCoordinates) {
+    // FIXME same as above
+    @PostMapping("/{tracking-id}/driver/{driver-id}/report/pickup/from/shipper/{shipper-id}")
+    fun reportPickup(@PathVariable("tracking-id") trackingId: String, @PathVariable("driver-id") driverId: UserId, @PathVariable("shipper-id") shipperId: UserId, @RequestBody location: Location) {
+        shippingService.reportPickup(TrackingId(trackingId), Shipper(shipperId), Driver(driverId), location)
     }
 
     @ExceptionHandler

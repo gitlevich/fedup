@@ -30,7 +30,7 @@ class DriverEndpointTest {
 
     @Test
     fun `given shipment request is accepted by an existing driver, 200 code is expected`() {
-        mvc.perform(MockMvcRequestBuilders.post("/shipment/${trackingId.value}/${driver.identity}")
+        mvc.perform(MockMvcRequestBuilders.post("/shipment/${trackingId.value}/driver/${driver.identity}/accept")
             .content(location.asJson())
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON))
@@ -43,7 +43,7 @@ class DriverEndpointTest {
             .whenever(shippingService)
             .acceptShipmentRequest(trackingId, driver, location)
 
-        mvc.perform(MockMvcRequestBuilders.post("/shipment/${trackingId.value}/${driver.identity}")
+        mvc.perform(MockMvcRequestBuilders.post("/shipment/${trackingId.value}/driver/${driver.identity}/accept")
             .content(location.asJson())
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON))
@@ -56,7 +56,7 @@ class DriverEndpointTest {
             .whenever(shippingService)
             .acceptShipmentRequest(trackingId, driver, location)
 
-        mvc.perform(MockMvcRequestBuilders.post("/shipment/${trackingId.value}/${driver.identity}")
+        mvc.perform(MockMvcRequestBuilders.post("/shipment/${trackingId.value}/driver/${driver.identity}/accept")
             .content(location.asJson())
             .contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON))

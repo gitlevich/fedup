@@ -5,7 +5,16 @@
 # * 'ptr' and 'ptrp' create a POST request with a simple or parameter-like body;
 # * 'mptr' and 'fptr' create a POST request to submit a form with a text or file field (multipart/form-data);
 
-POST http://localhost:8080/shipment/123-456-789/driver@drivers.com
+# Driver: accept shipment request
+POST http://localhost:8080/shipment/123-456-789/driver/driver@drivers.com/accept
+Content-Type: application/json
+
+{"latitude":37.7724868,"longitude":122.4166086}
+
+###
+
+# Driver: report shipment pickup
+POST http://localhost:8080/shipment/123-456-789/driver/driver@drivers.com/report/pickup/from/shipper/shipper@shippers.com
 Content-Type: application/json
 
 {"latitude":37.7724868,"longitude":122.4166086}

@@ -76,3 +76,32 @@ To accommodate these goals, here's the back-end stack (as of this moment):
 - Write everything in Kotlin because it is much nicer than Java, simpler than Scala and we love it.
   And because it's cool. Or at least because it's a modern strongly-typed language.
 - Use Docker and some cloud provider        
+
+## Current state of affairs
+There are three independent applications that communicate via Kafka and expose REST endpoints for the client:
+- Shipment service
+  - This is the centerpiece of the application. It coordinates shippers, drivers and receivers 
+    as they collaborate on shipping packages (shipments) across town. It does that by responding to clients' commands
+    by publishing various events via Kafka to other services. Eventually, in response, these services publish
+    events that Shipment service needs to move shipments along.  
+  - It exposes three rest endpoints: for drivers, for shippers and for receivers. 
+- Location service
+  - responsible for tracking locations of the active users and transforming a stream of `nearby driver requests` 
+    to a stream of `located drivers`
+  - exposes a single REST endpoint. You can POST to it using the contents of `location/src/test/resources/location_reporting.http`     
+- User service
+  - responsible for user registration, notification, etc. Not quite thought through yet, just sketched out. At the moment, it's
+    supposed to also deal with payments, but I think these need to move to another service: very different responsibilities.
+
+- to build, run `mvn clean install` in project root. This will build 3 executable jars, one for each service. The jars are:
+   - location/target/location-0.0.1-SNAPSHOT.jar
+   - shipment/target/shipment-0.0.1-SNAPSHOT.jar
+   - user/target/user-0.0.1-SNAPSHOT.jar
+- they can be run as `java -jar location/target/location-0.0.1-SNAPSHOT.jar` from project root (substitute `location` 
+  with the service name you want)
+- you can try to run `docker-compose -f docker-compose.yml up` to start Kafka and Zookeeper. It will start the services, 
+  however I have not been able to get my services to connect to the broker running in container (more Kafka woes).   
+- at the moment, none of them really do anything useful, partially because not much is implemented, and partially because of Kafka woes.
+  You can report a location to the Location service (see above) and then see it published on a Kafka topic by running<br/>
+  `kafka-console-consumer --topic user-locations --from-beginning --bootstrap-server localhost:29092 --property print.key=true --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer`,<br/> 
+  that's about it 
