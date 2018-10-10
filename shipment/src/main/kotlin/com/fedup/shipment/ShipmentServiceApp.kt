@@ -13,10 +13,10 @@ import org.springframework.context.annotation.*
  * TODO create the topics it writes to (single-writer) and tables it uses; define its topics here instead of common
  */
 @SpringBootApplication
-class App
+class ShipmentServiceApp
 
 @Configuration
-class ApConfig {
+class AppConfig {
     @Bean
     fun streamsConfig(@Value("\${kafka.bootstrap.servers}") bootstrapServers: String,
                       @Value("\${kafka.state.dir}") stateDir: String,
@@ -25,5 +25,5 @@ class ApConfig {
 }
 
 fun main(args: Array<String>) {
-    runApplication<App>(*args)
+    runApplication<ShipmentServiceApp>(*args)
 }
