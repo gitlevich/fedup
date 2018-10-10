@@ -7,3 +7,5 @@ data class TrackingId(val value: String) {
         fun next() = TrackingId(UUID.randomUUID().toString())
     }
 }
+
+typealias UserId = String

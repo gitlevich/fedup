@@ -8,6 +8,9 @@ import org.springframework.stereotype.*
 
 /**
  * Encapsulates the machinery of interaction with Google's map API.
+ *
+ * Needs a fallback mechanism (e.g. in case Google maps are inaccessible, our whole application becomes useless
+ * as we can't locate drivers).
  */
 @Component
 class MapsIntegrationService(@Value("\${googlemaps.api.key}") private val googleMapsApiKey: String) {

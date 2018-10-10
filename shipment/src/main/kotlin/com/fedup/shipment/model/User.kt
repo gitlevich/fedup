@@ -1,6 +1,6 @@
 package com.fedup.shipment.model
 
-import com.fedup.shared.Characterization.Entity
+import com.fedup.shared.*
 
 sealed class User: Entity<String>()
 data class Shipper(override val identity: String): User()

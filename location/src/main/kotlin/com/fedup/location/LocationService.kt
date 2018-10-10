@@ -47,8 +47,12 @@ class LocationService(
      *
      * Note: this is not an ideal implementation, although it can be mitigated by windowing [userLocationStore]
      * to our agreed upon activity window, currently hardcoded as 1 hour, as it loads all drivers. A better
-     * implementation would use a graph algorithm to restrict the driver search space to a geographic area,
+     * implementation would use an algorithm to restrict the driver search space to a geographic area,
      * e.g. a bounding rectangle, with the shipper in its middle.
+     *
+     * Yet another alternative is to import local maps into Neo4j and perform the search there using their
+     * newly-added geo functionality. While this would be a cool solution, it's a major overkill for our
+     * needs, with the additional concern of keeping the graph up to date with Google maps.
      */
     private fun findActiveDrivers(): List<UserLocation> =
         try {
