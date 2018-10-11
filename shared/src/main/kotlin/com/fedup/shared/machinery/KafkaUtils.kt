@@ -23,7 +23,7 @@ fun createStreamsConfig(serviceId: String, bootstrapServers: String, stateDir: S
     return KafkaStreamsConfig(props)
 }
 
-data class KafkaStreamsConfig(val props: Properties) {
+open class KafkaStreamsConfig(val props: Properties) {
     val bootstrapServers = props[StreamsConfig.BOOTSTRAP_SERVERS_CONFIG].toString()
 }
 

@@ -27,6 +27,9 @@ object LocationEventGenerator {
     fun generateDriverRequests(trackingId: TrackingId = TrackingId.next(), howMany: Int = 1): List<NearbyDriversRequested> =
         (0..howMany).map { NearbyDriversRequested(trackingId, randomLocationWithinBounds(locationBounds)) }
 
+    fun generateUserLocations(howMany: Int = 1): List<UserLocation> =
+        (0..howMany).map { UserLocation("user_$it", randomLocationWithinBounds(locationBounds), UserRole.DRIVER) }
+
     fun createDriverRequestStream(events: List<NearbyDriversRequested>): KafkaStreams {
         val builder = StreamsBuilder()
 

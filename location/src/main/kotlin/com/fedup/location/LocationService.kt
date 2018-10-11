@@ -9,6 +9,7 @@ import com.fedup.shared.protocol.Topics.userLocations
 import com.fedup.shared.protocol.location.*
 import org.apache.kafka.clients.producer.*
 import org.apache.kafka.streams.*
+import org.apache.kafka.streams.Topology.AutoOffsetReset.*
 import org.apache.kafka.streams.kstream.*
 import org.apache.kafka.streams.state.*
 import org.slf4j.*
@@ -27,7 +28,7 @@ import java.time.*
  * Consumes from [driverRequests] topic to know when to look for drivers
  */
 @Component
-class LocationService(
+open class LocationService(
     private val mapService: MapsIntegrationService,
     private val kafkaConfig: KafkaStreamsConfig
 ) : KafkaService {
@@ -54,7 +55,7 @@ class LocationService(
      * newly-added geo functionality. While this would be a cool solution, it's a major overkill for our
      * needs, with the additional concern of keeping the graph up to date with Google maps.
      */
-    private fun findActiveDrivers(): List<UserLocation> =
+    internal fun findActiveDrivers(): List<UserLocation> =
         try {
             streams.store(userLocationStore, QueryableStoreTypes.keyValueStore<UserId, UserLocation>())
                 .all().iterator().asSequence()
@@ -100,7 +101,7 @@ class LocationService(
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(LocationService::class.java)
-        private const val userLocationStore = "user_locations_store"
+        internal const val userLocationStore = "user_locations_store"
 
         /**
          * Defines stream processing topology for Location Service. Given this is just a stateless and side effect free
@@ -111,30 +112,29 @@ class LocationService(
 
             // put user locations into userLocationStore where we can find them later
             topology
-                .stream<String, UserLocation>(
+                .table<String, UserLocation>(
                     userLocations.name,
-                    Consumed.with(userLocations.keySerde, userLocations.valueSerde)
-                )
-                .filter { _, userLocation -> userLocation.userRole == UserRole.DRIVER }
-                .groupByKey()
-                .reduce(
-                    { ul1, ul2 -> if (ul1.coordinates.time.isAfter(ul2.coordinates.time)) ul1 else ul2 },
+                    Consumed
+                        .with(userLocations.keySerde, userLocations.valueSerde)
+                        .withOffsetResetPolicy(EARLIEST),
                     Materialized.`as`(userLocationStore)
                 )
-
-            val driverRequests = topology.stream(
-                driverRequests.name,
-                Consumed.with(driverRequests.keySerde, driverRequests.valueSerde)
-            )
+                .toStream()
 
             // transform driver request stream to a stream of available drivers
-            driverRequests
+            topology
+                .stream<TrackingId, NearbyDriversRequested>(
+                    driverRequests.name,
+                    Consumed.with(driverRequests.keySerde, driverRequests.valueSerde)
+                )
+                .peek { key, value -> logger.info("Reading from driverRequest $key - $value") }
                 .mapValues { request ->
                     DriversLocated(
                         request.trackingId,
                         mapService.findNearestUsers(request.location, findDrivers)
                     )
                 }
+                .peek { key, value -> logger.info("Publishing to availableDrivers $key - $value") }
                 .to(
                     availableDrivers.name,
                     Produced.with(availableDrivers.keySerde, availableDrivers.valueSerde)

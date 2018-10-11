@@ -52,7 +52,7 @@ class LocationServiceIT {
             .isNotEmpty
             .anyMatch { it.key == availableDrivers.trackingId }    }
 
-    @Ignore("FIXME!! Something is wrong with the topology")
+//    @Ignore("FIXME!! Something is wrong with the topology")
     @Test
     fun `should publish DriversLocated event to available-drivers topic upon receiving NearbyDriversRequested`() {
         val driverRequest = LocationEventGenerator.generateDriverRequests(howMany = 1).first()
@@ -69,7 +69,7 @@ class LocationServiceIT {
     }
 
 
-    @Ignore("I have not been able to get Kafka state store to work for me yet")
+//    @Ignore("I have not been able to get Kafka state store to work for me yet")
     @Test
     fun `should find stored user location`() {
         val original = UserLocation("driver@drivers.com", Location(37.7534327, -122.4344288), UserRole.DRIVER)
@@ -77,6 +77,11 @@ class LocationServiceIT {
 
         val retrieved = locationService.locateUser(original.userId)
         assertThat(retrieved).isEqualTo(original)
+    }
+
+    @Test
+    fun `should find all local drivers`() {
+        assertThat(locationService.findActiveDrivers()).isNotEmpty
     }
 
     /* * * * * * * * * * * * * * * * * *   M A C H I N E R Y   * * * * * * * * * * * * * * * * */
