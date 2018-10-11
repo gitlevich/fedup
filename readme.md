@@ -93,8 +93,8 @@ There are three independent applications that communicate via Kafka and expose R
   - responsible for user registration, notification, etc. Not quite thought through yet, just sketched out. At the moment, it's
     supposed to also deal with payments, but I think these need to move to another service: very different responsibilities.
 
-In the picture below, circles are services, rectangles outside circles are streams, the rectangle inside Location Service is local store,
-and the humanoid figures are users.      
+In the picture below, circles are services, rectangles outside circles are streams, the rectangle inside Location Service is local store, and the humanoid figures are users.
+
 ![](FedUp Services.png)    
 
 #### How to build and run
