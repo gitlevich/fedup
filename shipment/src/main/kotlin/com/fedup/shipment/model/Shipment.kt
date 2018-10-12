@@ -25,31 +25,36 @@ data class Shipment internal constructor(
     override val identity = trackingId
 
     fun assignToDriver(driver: Driver, pickupLocation: Location) =
-        copy(driver = driver).transitionedTo(ASSIGNED_TO_DRIVER, pickupLocation.toSTC())
+        copy(driver = driver).transitionedTo(ASSIGNED_TO_DRIVER, pickupLocation)
 
     fun registerReceiverAcknowledgement(receiver: Receiver, deliveryLocation: Location) =
         when (receiver) {
             routingSpec.receiver -> copy(routingSpec = routingSpec.withDeliveryLocation(deliveryLocation))
-                .transitionedTo(UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, deliveryLocation.toSTC())
+                .transitionedTo(UPCOMING_DELIVERY_ACKNOWLEDGED_BY_RECEIVER, deliveryLocation)
+                .also { transitionedTo(State.EXCEPTION, deliveryLocation) }
             else                 -> throw ShipmentException("Acknowledged by unexpected receiver $receiver, expected ${routingSpec.receiver}")
         }
 
     fun registerPickup(driver: Driver, shipper: Shipper, pickupLocation: Location) =
         when {
-            isUnexpectedDriver(driver)    -> throw ShipmentException("Expected ${this.driver}, actual $driver")
+            isUnexpectedDriver(driver)     -> throw ShipmentException("Expected ${this.driver}, actual $driver")
+                .also { transitionedTo(State.EXCEPTION, pickupLocation) }
             routingSpec.shipper != shipper -> throw ShipmentException("Expected ${routingSpec.shipper}, actual $shipper")
-            else                           -> copy(driver = driver).transitionedTo(PICKED_UP_AND_ON_THE_WAY, pickupLocation.toSTC())
+                .also { transitionedTo(State.EXCEPTION, pickupLocation) }
+            else                           -> copy(driver = driver).transitionedTo(PICKED_UP_AND_ON_THE_WAY, pickupLocation)
         }
 
     private fun isUnexpectedDriver(driver: Driver) = this.driver != null && this.driver != driver
 
     fun registerDelivery(driver: Driver, receiver: Receiver, at: SpaceTimeCoordinates) =
         when {
-            isUnexpectedDriver(driver)      -> throw ShipmentException("Expected ${this.driver}, actual $driver")
+            isUnexpectedDriver(driver)       -> throw ShipmentException("Expected ${this.driver}, actual $driver")
+                .also { transitionedTo(State.EXCEPTION, at) }
             routingSpec.receiver != receiver -> throw ShipmentException("Expected ${routingSpec.receiver}, actual $receiver")
             else                             -> copy(driver = driver).transitionedTo(DELIVERED, at)
         }
 
+    private fun transitionedTo(newState: State, at: Location) = transitionedTo(newState, at.toSTC())
     private fun transitionedTo(newState: State, at: SpaceTimeCoordinates) =
         if (isStateTransitionAllowed(state, newState))
             copy(state = newState).copy(history = history + ShipmentHistoryRecord(newState, at))
@@ -62,7 +67,7 @@ data class Shipment internal constructor(
         ASSIGNED_TO_DRIVER,
         PICKED_UP_AND_ON_THE_WAY,
         DELIVERED,
-        EXCEPTION
+        EXCEPTION // TODO this is more than one state, we need to either create an enum value for each, or convert this to a sealed class and give the thing some arguments
     }
 
     companion object {

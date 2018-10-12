@@ -52,7 +52,6 @@ class LocationServiceIT {
             .isNotEmpty
             .anyMatch { it.key == availableDrivers.trackingId }    }
 
-//    @Ignore("FIXME!! Something is wrong with the topology")
     @Test
     fun `should publish DriversLocated event to available-drivers topic upon receiving NearbyDriversRequested`() {
         val driverRequest = LocationEventGenerator.generateDriverRequests(howMany = 1).first()
