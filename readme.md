@@ -55,17 +55,20 @@ This is what they need to get started:
     - accept pickup request
     - make their location available while they are working
 
-Additionally, the need a centralized way to:    
+Additionally, they need a centralized way to:    
 - track locations of drivers, shippers and receivers to optimize routes
 - track progress of every package to provide real-time status updates
 - expose the functionality required by the mobile apps via APIs
 
 ## Design goals
 - design the application as a number of collaborating microservices, each fitting a bounded context
-  of the problem it is responsible for solving. 
-- decouple the services from each other by using events 
-- make it very easy to deploy the services in containers to make horizontal scaling trivial 
-- write each service so that it can run on smallish boxes for inexpensive cloud deployment
+  of the problem it is responsible for solving (to make each simple)
+- to make the the services highly available and extremely resilient to failure (to avoid disappointing 
+  the customers)
+- to make the services as independent from each other as practical by avoiding direct interactions and 
+  using events instead
+- to make deployment trivial to enable easy horizontal scaling
+- to make services not overly resource-hungry to run them on smallish boxes for inexpensive cloud deployment
 - automate everything (CI/CD)
 - use event streams as the source of truth
 
@@ -79,16 +82,18 @@ To accommodate these goals, here's the back-end stack (as of this moment):
 - Use Docker and some cloud provider        
 
 ## Current state of affairs
-There are three independent applications that communicate via Kafka and expose REST endpoints for the client:
+So far, we have sketched 3 independent service that communicate via Kafka and expose REST endpoints for the client:
 - Shipment service
   - This is the centerpiece of the application. It coordinates shippers, drivers and receivers 
-    as they collaborate on shipping packages (shipments) across town. It does that by responding to clients' commands
-    by publishing various events via Kafka to other services. Eventually, in response, these services publish
-    events that Shipment service needs to move shipments along.  
+    as they collaborate on shipping packages (shipments) across town. It manages Shipments. A Shipment (the thing shipper
+    wants to be delivered to receiver) goes through a series of states through its lifetime from pickup request to delivery. 
+    The service processes commands from shippers, receivers and drivers, emits events that put other services into action,
+    responds to events emitted by other services and ultimately movea shipments along to successful delivery. It also knows
+    how to respond to mishaps in the shipping process.
   - It exposes three rest endpoints: for drivers, for shippers and for receivers. 
 - Location service
-  - responsible for tracking locations of the active users and transforming a stream of `nearby driver requests` 
-    to a stream of `located drivers`
+  - responsible for tracking locations of the active users for and transforming a stream of `nearby driver requests` (coming
+    from Shipping Service) to the stream of `located drivers` that Shipping Service consumes.
   - exposes a single REST endpoint. You can POST to it using the contents of `location/src/test/resources/location_reporting.http`     
 - User service
   - responsible for user registration, notification, etc. Not quite thought through yet, just sketched out. At the moment, it's
