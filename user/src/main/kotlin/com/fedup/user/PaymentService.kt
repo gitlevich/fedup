@@ -1,6 +1,6 @@
 package com.fedup.user
 
-import com.fedup.shared.*
+import com.fedup.shared.protocol.shipment.*
 
 class PaymentService {
     /**

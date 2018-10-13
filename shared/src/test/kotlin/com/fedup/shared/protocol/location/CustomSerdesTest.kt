@@ -1,7 +1,6 @@
 package com.fedup.shared.protocol.location
 
-import com.fedup.shared.*
-import com.fedup.shared.protocol.*
+import com.fedup.shared.protocol.shipment.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
 import java.time.*
@@ -10,11 +9,11 @@ class CustomSerdesTest {
     private val topic = "blah"
 
     @Test
-    fun `should serialize command NearbyDriversRequested and deserialize it back to the original`() {
+    fun `should serialize NearbyDriversRequested and deserialize it back to the original`() {
         val original = NearbyDriversRequested(TrackingId("123"), Location(37.7724868, -122.4166086))
 
-        val serialized = CustomSerdes.commandSerde.serializer().serialize(topic, original)
-        val deserialized = CustomSerdes.commandSerde.deserializer().deserialize(topic, serialized)
+        val serialized = LocationSerdes.driverRequested.serializer().serialize(topic, original)
+        val deserialized = LocationSerdes.driverRequested.deserializer().deserialize(topic, serialized)
 
         assertThat(deserialized).isEqualTo(original)
     }
@@ -29,8 +28,8 @@ class CustomSerdesTest {
             )
         )
 
-        val serialized = CustomSerdes.driversLocated.serializer().serialize(topic, original)
-        val deserialized = CustomSerdes.driversLocated.deserializer().deserialize(topic, serialized)
+        val serialized = LocationSerdes.driversLocated.serializer().serialize(topic, original)
+        val deserialized = LocationSerdes.driversLocated.deserializer().deserialize(topic, serialized)
 
         assertThat(deserialized).isEqualTo(original)
     }

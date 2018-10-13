@@ -2,7 +2,7 @@ package com.fedup.shared.protocol.location
 
 import com.fasterxml.jackson.datatype.jsr310.*
 import com.fasterxml.jackson.module.kotlin.*
-import com.fedup.shared.*
+import com.fedup.shared.protocol.shipment.*
 
 val objectMapper = jacksonObjectMapper().also { it.registerModule(JavaTimeModule()) }
 

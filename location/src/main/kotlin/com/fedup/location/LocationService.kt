@@ -1,12 +1,12 @@
 package com.fedup.location
 
-import com.fedup.shared.*
 import com.fedup.shared.machinery.*
 import com.fedup.shared.protocol.*
 import com.fedup.shared.protocol.Topics.availableDrivers
 import com.fedup.shared.protocol.Topics.driverRequests
 import com.fedup.shared.protocol.Topics.userLocations
 import com.fedup.shared.protocol.location.*
+import com.fedup.shared.protocol.shipment.*
 import org.apache.kafka.clients.producer.*
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.Topology.AutoOffsetReset.*
@@ -113,21 +113,23 @@ open class LocationService(
             // put user locations into userLocationStore where we can find them later
             topology
                 .table<String, UserLocation>(
-                    userLocations.name,
+                    Topics.userLocations.name,
                     Consumed
                         .with(userLocations.keySerde, userLocations.valueSerde)
                         .withOffsetResetPolicy(EARLIEST),
                     Materialized.`as`(userLocationStore)
                 )
                 .toStream()
+                .to(userLocationStore,
+                    Produced.with(userLocations.keySerde, userLocations.valueSerde))
 
             // transform driver request stream to a stream of available drivers
             topology
                 .stream<TrackingId, NearbyDriversRequested>(
-                    driverRequests.name,
+                    Topics.driverRequests.name,
                     Consumed.with(driverRequests.keySerde, driverRequests.valueSerde)
                 )
-                .peek { key, value -> logger.info("Reading from driverRequest $key - $value") }
+                .peek { key, value -> logger.info("Reading from driverRequested $key - $value") }
                 .mapValues { request ->
                     DriversLocated(
                         request.trackingId,

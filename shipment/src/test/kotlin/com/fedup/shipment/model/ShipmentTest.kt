@@ -1,7 +1,7 @@
 package com.fedup.shipment.model
 
-import com.fedup.shared.*
 import com.fedup.shared.protocol.location.*
+import com.fedup.shared.protocol.shipment.*
 import com.fedup.shipment.model.Shipment.*
 import com.fedup.shipment.model.Shipment.State.*
 import org.assertj.core.api.Assertions.*

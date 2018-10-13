@@ -1,9 +1,9 @@
 package com.fedup.location
 
-import com.fedup.shared.*
 import com.fedup.shared.machinery.*
 import com.fedup.shared.protocol.*
 import com.fedup.shared.protocol.location.*
+import com.fedup.shared.protocol.shipment.*
 import org.apache.kafka.clients.producer.*
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.kstream.*
