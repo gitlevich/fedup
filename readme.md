@@ -88,7 +88,7 @@ So far, we have sketched 3 independent service that communicate via Kafka and ex
     as they collaborate on shipping packages (shipments) across town. It manages Shipments. A Shipment (the thing shipper
     wants to be delivered to receiver) goes through a series of states through its lifetime from pickup request to delivery. 
     The service processes commands from shippers, receivers and drivers, emits events that put other services into action,
-    responds to events emitted by other services and ultimately movea shipments along to successful delivery. It also knows
+    responds to events emitted by other services and ultimately moves shipments along to successful delivery. It also knows
     how to respond to mishaps in the shipping process.
   - It exposes three rest endpoints: for drivers, for shippers and for receivers. 
 - Location service
