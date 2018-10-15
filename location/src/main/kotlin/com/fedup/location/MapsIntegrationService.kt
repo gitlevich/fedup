@@ -16,14 +16,13 @@ import org.springframework.stereotype.*
 class MapsIntegrationService(@Value("\${googlemaps.api.key}") private val googleMapsApiKey: String) {
 
     /**
-     * Orders the users supplied by [findDrivers] function argument by travel time to the specified location,
+     * Orders the users supplied by [userLocations] function argument by travel time to the specified location,
      * returns at most [limit] closest users.
      */
-    fun findNearestUsers(location: Location, findDrivers: () -> List<UserLocation>, limit: Int = 5): List<UserWithDistance> {
-        val availableDrivers = findDrivers()
-        if (availableDrivers.isEmpty()) return emptyList()
+    fun findNearestUsers(location: Location, userLocations: List<UserLocation>, limit: Int = 5): List<UserWithDistance> {
+        if (userLocations.isEmpty()) return emptyList()
 
-        val driverLocations = availableDrivers
+        val driverLocations = userLocations
             .map { it.coordinates.place.toString() }
             .toTypedArray()
 
@@ -37,7 +36,7 @@ class MapsIntegrationService(@Value("\${googlemaps.api.key}") private val google
 
         return distanceMatrix.rows.first().elements
             .map { HowFar(it.distance, it.duration) }
-            .zip(availableDrivers)
+            .zip(userLocations)
             .asSequence()
             .sortedBy { it.first.duration.inSeconds }
             .take(limit)

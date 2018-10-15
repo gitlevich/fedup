@@ -11,6 +11,7 @@ import org.apache.kafka.clients.producer.*
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.Topology.AutoOffsetReset.*
 import org.apache.kafka.streams.kstream.*
+import org.apache.kafka.streams.processor.*
 import org.apache.kafka.streams.state.*
 import org.slf4j.*
 import org.springframework.stereotype.*
@@ -28,8 +29,8 @@ import java.time.*
  * Consumes from [driverRequests] topic to know when to look for drivers
  */
 @Component
-open class LocationService(
-    private val mapService: MapsIntegrationService,
+class LocationService(
+    private val topology: StreamsBuilder,
     private val kafkaConfig: KafkaStreamsConfig
 ) : KafkaService {
 
@@ -44,35 +45,10 @@ open class LocationService(
     }
 
     /**
-     * Locates all active drivers, where "active" is a driver that has reported his location within last hour
-     *
-     * Note: this is not an ideal implementation, although it can be mitigated by windowing [userLocationStore]
-     * to our agreed upon activity window, currently hardcoded as 1 hour, as it loads all drivers. A better
-     * implementation would use an algorithm to restrict the driver search space to a geographic area,
-     * e.g. a bounding rectangle, with the shipper in its middle.
-     *
-     * Yet another alternative is to import local maps into Neo4j and perform the search there using their
-     * newly-added geo functionality. While this would be a cool solution, it's a major overkill for our
-     * needs, with the additional concern of keeping the graph up to date with Google maps.
-     */
-    internal fun findActiveDrivers(): List<UserLocation> =
-        try {
-            streams.store(userLocationStore, QueryableStoreTypes.keyValueStore<UserId, UserLocation>())
-                .all().iterator().asSequence()
-                .map { (it.value) }
-                .filter { userLocation -> userLocation.coordinates.time.isAfter(OffsetDateTime.now().minusHours(1)) }
-                .toList()
-        } catch (e: Exception) {
-            // FIXME This is actually a lie: we don't know if drivers are available. Work out what to do here.
-            throw NoDriversAvailable(e)
-        }
-
-    /**
      * Looks up the user in a KTable event-sourced from [userLocations] stream
      */
     fun locateUser(userId: UserId): UserLocation? =
         streams.store(userLocationStore, QueryableStoreTypes.keyValueStore<UserId, UserLocation>())[userId]
-
 
     override fun close() {
         streams.close()
@@ -82,10 +58,11 @@ open class LocationService(
      * An instance of KafkaStreams that expresses our processing topology
      */
     private val streams by lazy {
-        KafkaStreams(locationServiceTopology(mapService) { findActiveDrivers() }.build(), kafkaConfig.props).also {
-            it.start()
-            logger.info("Started location service")
-        }
+        KafkaStreams(topology.build(), kafkaConfig.props)
+            .also {
+                it.start()
+                logger.info("Started location service")
+            }
     }
 
     /**
@@ -107,45 +84,60 @@ open class LocationService(
          * Defines stream processing topology for Location Service. Given this is just a stateless and side effect free
          * definition of the pipeline, I deliberately placed it into companion object to underscore that fact.
          */
-        fun locationServiceTopology(mapService: MapsIntegrationService, findDrivers: () -> List<UserLocation>): StreamsBuilder {
-            val topology = StreamsBuilder()
-
-            // put user locations into userLocationStore where we can find them later
-            topology
-                .table<String, UserLocation>(
-                    Topics.userLocations.name,
-                    Consumed
-                        .with(userLocations.keySerde, userLocations.valueSerde)
-                        .withOffsetResetPolicy(EARLIEST),
-                    Materialized.`as`(userLocationStore)
-                )
-                .toStream()
-                .to(userLocationStore,
-                    Produced.with(userLocations.keySerde, userLocations.valueSerde))
-
-            // transform driver request stream to a stream of available drivers
-            topology
-                .stream<TrackingId, NearbyDriversRequested>(
-                    Topics.driverRequests.name,
-                    Consumed.with(driverRequests.keySerde, driverRequests.valueSerde)
-                )
-                .peek { key, value -> logger.info("Reading from driverRequested $key - $value") }
-                .mapValues { request ->
-                    DriversLocated(
-                        request.trackingId,
-                        mapService.findNearestUsers(request.location, findDrivers)
+        fun topology(mapService: MapsIntegrationService): StreamsBuilder =
+            StreamsBuilder().apply {
+                table<String, UserLocation>(
+                        Topics.userLocations.name,
+                        Consumed
+                            .with(userLocations.keySerde, userLocations.valueSerde)
+                            .withOffsetResetPolicy(EARLIEST),
+                        Materialized.`as`(userLocationStore)
                     )
-                }
-                .peek { key, value -> logger.info("Publishing to availableDrivers $key - $value") }
-                .to(
-                    availableDrivers.name,
-                    Produced.with(availableDrivers.keySerde, availableDrivers.valueSerde)
-                )
+                    .toStream()
+                    .peek { key, value -> println("### locations: $key: $value") }
+                    .to("trash", Produced.with(userLocations.keySerde, userLocations.valueSerde))
 
-            return topology
-        }
+                stream(driverRequests.name, Consumed.with(driverRequests.keySerde, driverRequests.valueSerde))
+                    .peek { key, value -> println("### request: $key: $value") }
+                    .transformValues(
+                        ValueTransformerSupplier { DriverRequestTransformer(mapService, userLocationStore) },
+                        userLocationStore
+                    )
+                    .peek { key, value -> println("### response: $key: $value") }
+                    .to(availableDrivers.name, Produced.with(availableDrivers.keySerde, availableDrivers.valueSerde))
+            }
     }
 }
 
 class UserNotFound(userId: UserId) : Exception("User $userId not found")
 class NoDriversAvailable(cause: Throwable) : Exception("No drivers are available", cause)
+
+class DriverRequestTransformer(
+    private val mapService: MapsIntegrationService,
+    private val storeName: String
+) : ValueTransformer<NearbyDriversRequested, DriversLocated> {
+
+    private lateinit var userLocationStore: KeyValueStore<UserId, UserLocation>
+    private lateinit var processorContext: ProcessorContext
+
+    override fun init(context: ProcessorContext) {
+        processorContext = context
+        userLocationStore = processorContext.getStateStore(storeName) as KeyValueStore<UserId, UserLocation>
+    }
+
+    override fun transform(request: NearbyDriversRequested): DriversLocated {
+        val allUserLocations = userLocationStore.all().iterator().asSequence().map { it.value }
+            .filter { userLocation -> isRecentEnough(userLocation) }
+            .toList()
+
+        return DriversLocated(
+            request.trackingId,
+            mapService.findNearestUsers(request.location, allUserLocations)
+        )
+    }
+
+    private fun isRecentEnough(userLocation: UserLocation) =
+        userLocation.coordinates.time.isAfter(OffsetDateTime.now().minusHours(1))
+
+    override fun close() {}
+}

@@ -78,11 +78,6 @@ class LocationServiceIT {
         assertThat(retrieved).isEqualTo(original)
     }
 
-    @Test
-    fun `should find all local drivers`() {
-        assertThat(locationService.findActiveDrivers()).isNotEmpty
-    }
-
     /* * * * * * * * * * * * * * * * * *   M A C H I N E R Y   * * * * * * * * * * * * * * * * */
     @Autowired private lateinit var locationService: LocationService
     @Autowired private lateinit var kafkaConfig: KafkaStreamsConfig

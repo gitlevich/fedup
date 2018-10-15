@@ -1,6 +1,5 @@
 package com.fedup.location
 
-import com.fedup.location.LocationEventGenerator.generateUserLocations
 import com.fedup.shared.machinery.*
 import com.fedup.shared.protocol.*
 import com.fedup.shared.protocol.location.*
@@ -11,7 +10,6 @@ import org.apache.kafka.common.utils.*
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.integration.utils.*
 import org.apache.kafka.streams.integration.utils.IntegrationTestUtils.*
-import org.apache.kafka.streams.state.*
 import org.apache.kafka.test.*
 import org.assertj.core.api.Assertions.*
 import org.junit.*
@@ -24,10 +22,17 @@ class LocationServiceTest {
     fun `should publish DriversLocated event to available-drivers topic upon receiving NearbyDriversRequested`() {
         given(mapService.findNearestUsers(any(), any(), any())).willReturn(driversWithDistance)
 
-        val driverRequest = LocationEventGenerator.generateDriverRequests(howMany = 1).first()
-        produceToDriverRequests(listOf<KeyValue<TrackingId, NearbyDriversRequested>>(KeyValue(driverRequest.trackingId, driverRequest)))
+        produce(
+            Topics.userLocations,
+            LocationEventGenerator
+                .generateUserLocations(10)
+                .map { userLocation -> KeyValue(userLocation.userId, userLocation) }
+        )
 
-        val availableDrivers = consumeFromAvailableDrivers(Duration.ofSeconds(1), 1)
+        val driverRequest = LocationEventGenerator.generateDriverRequests(howMany = 1).first()
+        produce(Topics.driverRequests, listOf<KeyValue<TrackingId, NearbyDriversRequested>>(KeyValue(driverRequest.trackingId, driverRequest)))
+
+        val availableDrivers = consume(Topics.availableDrivers, Duration.ofSeconds(1), 1)
 
         assertThat(availableDrivers)
             .hasSize(1)
@@ -44,25 +49,9 @@ class LocationServiceTest {
         assertThat(retrieved).isEqualTo(original)
     }
 
-    @Test
-    fun `should find all local drivers`() {
-        val userLocations = generateUserLocations(1)
-        produceValuesSynchronously(Topics.userLocations.name,
-            userLocations,
-            TestUtils.producerConfig(EMBEDDED_KAFKA.bootstrapServers(),
-                Topics.userLocations.keySerde.serializer().javaClass,
-                Topics.userLocations.valueSerde.serializer().javaClass),
-            mockTime)
-
-        val closestLocations = locationService.findActiveDrivers()
-
-        assertThat(closestLocations).isNotEmpty
-    }
 
     /* * * * * * * * * * * * * * * * * *   M A C H I N E R Y   * * * * * * * * * * * * * * * * */
-    private lateinit var kafkaStreams: KafkaStreams
     private lateinit var locationService: LocationService
-    private val mockTime = Time.SYSTEM
     private val mapService = mock<MapsIntegrationService>()
 
     @Before
@@ -75,14 +64,13 @@ class LocationServiceTest {
             Properties())
         properties[IntegrationTestUtils.INTERNAL_LEAVE_GROUP_ON_CLOSE] = true
 
-        locationService = LocationService(mapService, KafkaStreamsConfig(properties))
-        kafkaStreams = KafkaStreams(LocationService.locationServiceTopology(mapService) { emptyList() }.build(), properties)
-        kafkaStreams.start()
+        val topology = LocationService.topology(mapService)
+        locationService = LocationService(topology, KafkaStreamsConfig(properties))
     }
 
     @After
     fun tearDown() {
-        kafkaStreams.close()
+        locationService.close()
     }
 
     companion object {
@@ -103,22 +91,23 @@ class LocationServiceTest {
             UserWithDistance("elon", "1 hour 12 mins (113 km)", DistanceInMeters(112851), Duration.ofSeconds(4314))
         )
 
-        private fun consumeFromAvailableDrivers(waitFor: Duration, maxMessages: Int): List<DriversLocated> =
-            IntegrationTestUtils.readValues<DriversLocated>(
-                Topics.availableDrivers.name,
+        private fun <K, V> consume(topic: Topic<K, V>, waitFor: Duration, maxMessages: Int): List<V> =
+            IntegrationTestUtils.readValues<V>(
+                topic.name,
                 TestUtils.consumerConfig(EMBEDDED_KAFKA.bootstrapServers(),
-                    Topics.availableDrivers.keySerde.deserializer().javaClass,
-                    Topics.availableDrivers.valueSerde.deserializer().javaClass),
+                    topic.keySerde.deserializer().javaClass,
+                    topic.valueSerde.deserializer().javaClass),
                 waitFor.toMillis(),
                 maxMessages
             )
 
-        private fun produceToDriverRequests(requests: List<KeyValue<TrackingId, NearbyDriversRequested>>) {
-            produceKeyValuesSynchronously(Topics.driverRequests.name,
+        private fun <K, V> produce(topic: Topic<K, V>, requests: List<KeyValue<K, V>>) {
+            produceKeyValuesSynchronously(
+                topic.name,
                 requests,
                 TestUtils.producerConfig(EMBEDDED_KAFKA.bootstrapServers(),
-                    Topics.driverRequests.keySerde.serializer().javaClass,
-                    Topics.driverRequests.valueSerde.serializer().javaClass),
+                    topic.keySerde.serializer().javaClass,
+                    topic.valueSerde.serializer().javaClass),
                 Time.SYSTEM
             )
         }
