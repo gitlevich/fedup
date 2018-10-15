@@ -17,12 +17,12 @@ Feel free to contribute!
 FedUp is a hot last mile delivery startup. The business model is to offer an amazing customer
 experience for local delivery to people fed up with FedEx/UPS/USPS. The startup is funded
 by Peerless Shipping, the international container shipping company that decided to try its
-hand in a local delivery market.
+hand in local delivery market.
 
 They plan to become profitable by getting their users pay a monthly membership and a reasonable 
 per-delivery fee. 
 
-They think they can tap into the same driver market that Uber and Caviar uses. They plan to
+They think they can tap into the same driver market that Uber and Caviar use. They plan to
 generously pay their freelance drivers for transporting packages between FedUp's happy customers.
 
 #### How they are going to do it
@@ -35,36 +35,40 @@ After the pickup, the receiver is notified of the driver's ETA. The driver
 takes the package to the specified location and hands it to the receiver, at which point the latter 
 acknowledges package receipt, and the transaction is concluded.
 
-There are some thoughts to optimize the routes so that the driver carries several packages at a time.    
+There are some thoughts to optimize the routes so that the driver carries several packages at a time, as well as 
+to eventually expand the business to do last mile delivery for online retailers like Amazon (because everyone is 
+fed up with packages being dumped outside and then stolen).    
 
-They decided to start in Bay Area, offering same day, and sometimes same hour, service.
+They decided to start in the Bay Area, offering same day, and sometimes same hour, service.
 
 #### Technical needs
 This is what they need to get started:
 
-- a mobile app for the prospective users (both shippers and receivers) to enable them to
+- a mobile app for the prospective customers (both shippers and receivers) to enable them to
     - order a pickup
     - track package progress
     - be notified when they need to take action
-    - make their location available between pickup request and pickup / delivery notification and delivery
+    - make their location available between pickup request / pickup / delivery notification / delivery
     
-- a mobile app for the concierges to enable them to
-    - be notified when their action is requested
-    - scan the package on receipt
-    - collect the receiver's signature upon delivery
-    - make their location available while they are working to optimize routes
+- a mobile app for the drivers to enable them to
+    - be notified when their service is requested
+    - accept pickup request
+    - make their location available while they are working
 
-Additionally, the need a centralized way to:    
-- track locations of drivers, shippers and receivers to optimize routes and coordinate package hand-offs
-- track handling events for every package to provide real-time state updates
-- support the mobile apps by exposing a set of APIs they need
+Additionally, they need a centralized way to:    
+- track locations of drivers, shippers and receivers to optimize routes
+- track progress of every package to provide real-time status updates
+- expose the functionality required by the mobile apps via APIs
 
 ## Design goals
 - design the application as a number of collaborating microservices, each fitting a bounded context
-  of the problem it is responsible for solving. 
-- decouple the services from each other by using events 
-- make it very easy to deploy the services in containers to make horizontal scaling trivial. 
-- write each service so that it can run on smallish boxes for inexpensive cloud deployment
+  of the problem it is responsible for solving (to make each simple)
+- to make the the services highly available and extremely resilient to failure (to avoid disappointing 
+  the customers)
+- to make the services as independent from each other as practical by avoiding direct interactions and 
+  using events instead
+- to make deployment trivial to enable easy horizontal scaling
+- to make services not overly resource-hungry to run them on smallish boxes for inexpensive cloud deployment
 - automate everything (CI/CD)
 - use event streams as the source of truth
 
@@ -78,16 +82,18 @@ To accommodate these goals, here's the back-end stack (as of this moment):
 - Use Docker and some cloud provider        
 
 ## Current state of affairs
-There are three independent applications that communicate via Kafka and expose REST endpoints for the client:
+So far, we have sketched 3 independent service that communicate via Kafka and expose REST endpoints for the client:
 - Shipment service
   - This is the centerpiece of the application. It coordinates shippers, drivers and receivers 
-    as they collaborate on shipping packages (shipments) across town. It does that by responding to clients' commands
-    by publishing various events via Kafka to other services. Eventually, in response, these services publish
-    events that Shipment service needs to move shipments along.  
+    as they collaborate on shipping packages (shipments) across town. It manages Shipments. A Shipment (the thing shipper
+    wants to be delivered to receiver) goes through a series of states through its lifetime from pickup request to delivery. 
+    The service processes commands from shippers, receivers and drivers, emits events that put other services into action,
+    responds to events emitted by other services and ultimately moves shipments along to successful delivery. It also knows
+    how to respond to mishaps in the shipping process.
   - It exposes three rest endpoints: for drivers, for shippers and for receivers. 
 - Location service
-  - responsible for tracking locations of the active users and transforming a stream of `nearby driver requests` 
-    to a stream of `located drivers`
+  - responsible for tracking locations of the active users for and transforming a stream of `nearby driver requests` (coming
+    from Shipping Service) to the stream of `located drivers` that Shipping Service consumes.
   - exposes a single REST endpoint. You can POST to it using the contents of `location/src/test/resources/location_reporting.http`     
 - User service
   - responsible for user registration, notification, etc. Not quite thought through yet, just sketched out. At the moment, it's
