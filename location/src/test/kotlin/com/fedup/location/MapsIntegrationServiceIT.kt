@@ -11,13 +11,18 @@ import java.time.*
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
-class MapsIntegrationServiceTest {
+class MapsIntegrationServiceIT {
     @Autowired private lateinit var service: MapsIntegrationService
     private val shipperLocation =  Location(37.7724868, -122.4166086)
 
+    /**
+     * This test talks to Google Maps API and may fail if the API decides to return different distances or times.
+     * If this becomes a problem, it needs to relax its expectations (e.g. just check that userIds are in the right
+     * order instead of verifying the entire UserWithDistance value)
+     */
     @Test
     fun `should find closest users ordered by time to travel`() {
-        val nearestUsers = service.findNearestUsers(shipperLocation, { fiveUsers })
+        val nearestUsers = service.findNearestUsers(shipperLocation, fiveUsers )
 
         assertThat(nearestUsers)
             .hasSize(5)
@@ -26,7 +31,7 @@ class MapsIntegrationServiceTest {
                 UserWithDistance(jane.userId, "13 mins (4.0 km)", DistanceInMeters(3993), Duration.ofSeconds(777)),
                 UserWithDistance(vlad.userId, "14 mins (9.4 km)", DistanceInMeters(9404), Duration.ofSeconds(819)),
                 UserWithDistance(arnold.userId, "1 hour 6 mins (104 km)", DistanceInMeters(103602), Duration.ofSeconds(3966)),
-                UserWithDistance(elon.userId, "1 hour 12 mins (113 km)", DistanceInMeters(112851), Duration.ofSeconds(4314))
+                UserWithDistance(elon.userId, "1 hour 12 mins (113 km)", DistanceInMeters(112850), Duration.ofSeconds(4314))
             )
     }
 
@@ -34,7 +39,7 @@ class MapsIntegrationServiceTest {
     fun `given the number of available users exceeds the limit, should throw away any extras`() {
         val nearestUsers = service.findNearestUsers(
             location = shipperLocation,
-            findDrivers = { fiveUsers },
+            userLocations = fiveUsers,
             limit = 2
         )
 
@@ -46,7 +51,7 @@ class MapsIntegrationServiceTest {
     fun `given the number of available users is lower than the limit, should return all available`() {
         val nearestUsers = service.findNearestUsers(
             location = shipperLocation,
-            findDrivers = { fiveUsers },
+            userLocations = fiveUsers,
             limit = 20
         )
 

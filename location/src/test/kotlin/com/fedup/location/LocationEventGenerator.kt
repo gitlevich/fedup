@@ -1,9 +1,9 @@
 package com.fedup.location
 
-import com.fedup.shared.*
 import com.fedup.shared.machinery.*
 import com.fedup.shared.protocol.*
 import com.fedup.shared.protocol.location.*
+import com.fedup.shared.protocol.shipment.*
 import org.apache.kafka.clients.producer.*
 import org.apache.kafka.streams.*
 import org.apache.kafka.streams.kstream.*
@@ -26,6 +26,9 @@ object LocationEventGenerator {
 
     fun generateDriverRequests(trackingId: TrackingId = TrackingId.next(), howMany: Int = 1): List<NearbyDriversRequested> =
         (0..howMany).map { NearbyDriversRequested(trackingId, randomLocationWithinBounds(locationBounds)) }
+
+    fun generateUserLocations(howMany: Int = 1): List<UserLocation> =
+        (0..howMany).map { UserLocation("user_$it", randomLocationWithinBounds(locationBounds), UserRole.DRIVER) }
 
     fun createDriverRequestStream(events: List<NearbyDriversRequested>): KafkaStreams {
         val builder = StreamsBuilder()

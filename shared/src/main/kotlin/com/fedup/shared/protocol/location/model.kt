@@ -1,6 +1,6 @@
 package com.fedup.shared.protocol.location
 
-import com.fedup.shared.*
+import com.fedup.shared.protocol.shipment.*
 import java.time.*
 
 data class Location(val latitude: Double, val longitude: Double) {

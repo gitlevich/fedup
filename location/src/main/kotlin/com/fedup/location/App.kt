@@ -28,6 +28,9 @@ class ApConfig(objectMapper: ObjectMapper) {
                             @Value("\${kafka.state.dir}") stateDir: String,
                             @Value("\${kafka.enableEOS}") enableEOS: Boolean): KafkaStreamsConfig =
         createStreamsConfig(LocationService::class.simpleName!!, bootstrapServers, stateDir, enableEOS)
+
+    @Bean fun topology(mapsIntegrationService: MapsIntegrationService): StreamsBuilder =
+        LocationService.topology(mapsIntegrationService)
 }
 
 fun main(args: Array<String>) {

@@ -1,7 +1,7 @@
 package com.fedup.shipment.model
 
-import com.fedup.shared.*
 import com.fedup.shared.machinery.*
+import com.fedup.shared.protocol.shipment.*
 import org.springframework.stereotype.*
 
 /**

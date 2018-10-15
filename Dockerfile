@@ -23,6 +23,8 @@ ENV KAFKA_MUSIC_APP_CLASS="io.confluent.examples.streams.interactivequeries.kafk
 ENV KAFKA_MUSIC_APP_REST_HOST=localhost
 ENV KAFKA_MUSIC_APP_REST_PORT=7070
 
+ENV HOST_IP=localhost
+
 EXPOSE $KAFKA_MUSIC_APP_REST_PORT
 
 # This affects how strings in Java class files are interpreted.  We want UTF-8, and this is the only locale in the

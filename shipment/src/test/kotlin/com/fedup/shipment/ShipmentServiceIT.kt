@@ -1,9 +1,8 @@
 package com.fedup.shipment
 
-import com.fedup.shared.*
 import com.fedup.shared.protocol.location.*
+import com.fedup.shared.protocol.shipment.*
 import com.fedup.shipment.model.*
-import com.nhaarman.mockito_kotlin.*
 import org.junit.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.*

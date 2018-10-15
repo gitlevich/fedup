@@ -1,2 +1,6 @@
-kafka-console-consumer --topic available-drivers --from-beginning --bootstrap-server localhost:29092 --property print.key=true --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
-kafka-delete-records --bootstrap-server localhost:29092 --offset-json-file delete_all_messages_in_topics.json
+kafka-console-consumer --from-beginning --bootstrap-server localhost:9093 --property print.key=true --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer  --topic available-drivers
+kafka-delete-records --bootstrap-server localhost:9093 --offset-json-file delete_all_messages_in_topics.json
+kafka-topics --zookeeper localhost:2181 --create --replication-factor 3 -partitions 3 --topic driver-requests
+kafka-topics --zookeeper localhost:2181 --create --replication-factor 3 -partitions 3 --topic available-drivers
+kafka-topics --zookeeper localhost:2181 --create --replication-factor 3 -partitions 3 --topic user-locations
+kafka-console-producer --broker-list localhost:9093,localhost:9095,localhost:9097 --property parse.key=true --property key.separator=:  --topic experiments-in

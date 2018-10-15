@@ -1,4 +1,4 @@
-package com.fedup.shared
+package com.fedup.shared.protocol.shipment
 
 import java.util.*
 
