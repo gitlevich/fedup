@@ -18,7 +18,19 @@ import org.springframework.stereotype.*
 import java.time.*
 
 /**
- * Responsible for tracking user locations and
+ * Responsible for tracking user locations and finding the users closest to others.
+ *
+ *
+ * Thoughts: actually, we want to figure out the partition to which to write the user location based on
+ * location, not user id (although we might need that as well to answer the question "where's the user?")
+ *
+ * So the trick here is to break our map of the city into squares and create a hash function that maps a location
+ * to one of these squares. Then, to answer the question "who are the nearest driver to this location?" we first
+ * determine calculate the squares included in a circle with the specified radius with the center in the location
+ * in question, then look up all the drivers in the found squares, and then, as the last step, send the found
+ * drivers location to Google Map API to pick the few closest (by driving time) to the given location. Which
+ * means that we drop the hard dependency on Google Maps availability and can continue with somewhat degraded, but still
+ * useful, service even when the Google API that we don't control becomes unavailable.
  *
  * Specifically:
  * - it records locations reported by users to [userLocations] stream
@@ -39,13 +51,16 @@ class LocationService(
      * probably are not interested in tracking user's trajectory over a long time, the underlying topic can be
      * aggressively compacted, e.g. have a retention policy of about an hour (because older locations are of little
      * use to our scenario)
+     *
+     * TODO: add writing to a topic with the key being location hash (where locations in the same square have the
+     * same key)
      */
     fun recordUserLocation(userLocation: UserLocation) {
         userLocationsProducer.send(ProducerRecord(Topics.userLocations.name, userLocation.userId, userLocation))
     }
 
     /**
-     * Looks up the user in a KTable event-sourced from [userLocations] stream
+     * Looks up the user in a store associated with a GlobalKTable event-sourced from [userLocations] stream
      */
     fun locateUser(userId: UserId): UserLocation? =
         streams.store(userLocationStore, QueryableStoreTypes.keyValueStore<UserId, UserLocation>())[userId]
