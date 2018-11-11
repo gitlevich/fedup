@@ -1,23 +1,25 @@
 package com.fedup.location
 
-import com.fedup.shared.machinery.*
+import com.fedup.shared.machinery.KafkaStreamsConfig
 import com.fedup.shared.protocol.*
 import com.fedup.shared.protocol.Topics.availableDrivers
 import com.fedup.shared.protocol.Topics.driverRequests
 import com.fedup.shared.protocol.Topics.userLocations
 import com.fedup.shared.protocol.location.*
-import com.fedup.shared.protocol.shipment.*
+import com.fedup.shared.protocol.shipment.TrackingId
 import com.nhaarman.mockito_kotlin.*
-import org.apache.kafka.common.serialization.*
-import org.apache.kafka.common.utils.*
-import org.apache.kafka.streams.*
+import org.apache.kafka.common.serialization.Serdes
+import org.apache.kafka.common.utils.Time
+import org.apache.kafka.streams.KeyValue
 import org.apache.kafka.streams.integration.utils.*
-import org.apache.kafka.streams.integration.utils.IntegrationTestUtils.*
+import org.apache.kafka.streams.integration.utils.IntegrationTestUtils.produceKeyValuesSynchronously
 import org.apache.kafka.test.*
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility.await
 import org.junit.*
-import java.time.*
+import java.time.Duration
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class LocationServiceTest {
 
@@ -48,11 +50,10 @@ class LocationServiceTest {
         val location = UserLocation("driver@drivers.com", Location(37.7534327, -122.4344288), UserRole.DRIVER)
         locationService.recordUserLocation(location)
 
-        val locations = consume(userLocations, Duration.ofSeconds(1), 1)
-        assertThat(locations).isNotEmpty.contains(location).describedAs("precondition")
-
-        val retrieved = locationService.locateUser(location.userId)
-        assertThat(retrieved).isEqualTo(location)
+        await().atMost(1, TimeUnit.SECONDS).untilAsserted {
+            assertThat(locationService.locateUser(location.userId))
+                .isEqualTo(location)
+        }
     }
 
     /* * * * * * * * * * * * * * * * * *   M A C H I N E R Y   * * * * * * * * * * * * * * * * */
