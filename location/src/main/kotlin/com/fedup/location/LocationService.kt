@@ -1,21 +1,20 @@
 package com.fedup.location
 
 import com.fedup.shared.machinery.*
-import com.fedup.shared.protocol.*
 import com.fedup.shared.protocol.Topics.availableDrivers
 import com.fedup.shared.protocol.Topics.driverRequests
 import com.fedup.shared.protocol.Topics.userLocations
 import com.fedup.shared.protocol.location.*
-import com.fedup.shared.protocol.shipment.*
+import com.fedup.shared.protocol.shipment.UserId
 import org.apache.kafka.clients.producer.*
 import org.apache.kafka.streams.*
-import org.apache.kafka.streams.Topology.AutoOffsetReset.*
+import org.apache.kafka.streams.Topology.AutoOffsetReset.EARLIEST
 import org.apache.kafka.streams.kstream.*
-import org.apache.kafka.streams.processor.*
+import org.apache.kafka.streams.processor.ProcessorContext
 import org.apache.kafka.streams.state.*
 import org.slf4j.*
-import org.springframework.stereotype.*
-import java.time.*
+import org.springframework.stereotype.Component
+import java.time.OffsetDateTime
 
 /**
  * Responsible for tracking user locations and finding the users closest to others.
@@ -42,8 +41,8 @@ import java.time.*
  */
 @Component
 class LocationService(
-    private val topology: StreamsBuilder,
-    private val kafkaConfig: KafkaStreamsConfig
+    topology: Topology,
+    kafkaConfig: KafkaStreamsConfig
 ) : KafkaService {
 
     /**
@@ -56,7 +55,7 @@ class LocationService(
      * same key)
      */
     fun recordUserLocation(userLocation: UserLocation) {
-        userLocationsProducer.send(ProducerRecord(Topics.userLocations.name, userLocation.userId, userLocation))
+        userLocationsProducer.send(ProducerRecord(userLocations.name, userLocation.userId, userLocation))
     }
 
     /**
@@ -70,26 +69,26 @@ class LocationService(
     }
 
     /**
-     * An instance of KafkaStreams that expresses our processing topology
+     * An instance of KafkaStreams with our processing topology
      */
-    private val streams by lazy {
-        KafkaStreams(topology.build(), kafkaConfig.props)
+    private val streams: KafkaStreams =
+        KafkaStreams(topology, kafkaConfig.props)
             .also {
+                it.setUncaughtExceptionHandler { _, e ->
+                    e.printStackTrace()
+                }
                 it.start()
                 logger.info("Started location service")
             }
-    }
 
     /**
      * The producer instance we use to write user locations to the topic this service owns.
      */
-    private val userLocationsProducer by lazy {
-        KafkaProducer(
-            kafkaConfig.props,
-            Topics.userLocations.keySerde.serializer(),
-            Topics.userLocations.valueSerde.serializer()
-        )
-    }
+    private val userLocationsProducer = KafkaProducer(
+        kafkaConfig.props,
+        userLocations.keySerde.serializer(),
+        userLocations.valueSerde.serializer()
+    )
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(LocationService::class.java)
@@ -99,28 +98,26 @@ class LocationService(
          * Defines stream processing topology for Location Service. Given this is just a stateless and side effect free
          * definition of the pipeline, I deliberately placed it into companion object to underscore that fact.
          */
-        fun topology(mapService: MapsIntegrationService): StreamsBuilder =
-            StreamsBuilder().apply {
-                table<String, UserLocation>(
-                        Topics.userLocations.name,
+        fun topology(mapService: MapsIntegrationService): Topology =
+            StreamsBuilder()
+                .apply {
+                    globalTable<String, UserLocation>(
+                        userLocations.name,
                         Consumed
                             .with(userLocations.keySerde, userLocations.valueSerde)
                             .withOffsetResetPolicy(EARLIEST),
                         Materialized.`as`(userLocationStore)
                     )
-                    .toStream()
-                    .peek { key, value -> println("### locations: $key: $value") }
-                    .to("trash", Produced.with(userLocations.keySerde, userLocations.valueSerde))
 
-                stream(driverRequests.name, Consumed.with(driverRequests.keySerde, driverRequests.valueSerde))
-                    .peek { key, value -> println("### request: $key: $value") }
-                    .transformValues(
-                        ValueTransformerSupplier { DriverRequestTransformer(mapService, userLocationStore) },
-                        userLocationStore
-                    )
-                    .peek { key, value -> println("### response: $key: $value") }
-                    .to(availableDrivers.name, Produced.with(availableDrivers.keySerde, availableDrivers.valueSerde))
-            }
+                    stream(driverRequests.name, Consumed.with(driverRequests.keySerde, driverRequests.valueSerde))
+                        .peek { key, value -> println("### request: $key: $value") }
+                        .transformValues(
+                            ValueTransformerSupplier { DriverRequestTransformer(mapService, userLocationStore) }
+                        )
+                        .peek { key, value -> println("### response: $key: $value") }
+                        .to(availableDrivers.name, Produced.with(availableDrivers.keySerde, availableDrivers.valueSerde))
+                }
+                .build()
     }
 }
 

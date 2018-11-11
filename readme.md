@@ -82,7 +82,7 @@ To accommodate these goals, here's the back-end stack (as of this moment):
 - Use Docker and some cloud provider        
 
 ## Current state of affairs
-So far, we have sketched 3 independent service that communicate via Kafka and expose REST endpoints for the client:
+So far, we have sketched 3 independent services that communicate via Kafka and expose REST endpoints for the client:
 - Shipment service
   - This is the centerpiece of the application. It coordinates shippers, drivers and receivers 
     as they collaborate on shipping packages (shipments) across town. It manages Shipments. A Shipment (the thing shipper

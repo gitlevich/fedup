@@ -2,6 +2,9 @@ package com.fedup.location
 
 import com.fedup.shared.machinery.*
 import com.fedup.shared.protocol.*
+import com.fedup.shared.protocol.Topics.availableDrivers
+import com.fedup.shared.protocol.Topics.driverRequests
+import com.fedup.shared.protocol.Topics.userLocations
 import com.fedup.shared.protocol.location.*
 import com.fedup.shared.protocol.shipment.*
 import com.nhaarman.mockito_kotlin.*
@@ -23,16 +26,16 @@ class LocationServiceTest {
         given(mapService.findNearestUsers(any(), any(), any())).willReturn(driversWithDistance)
 
         produce(
-            Topics.userLocations,
+            userLocations,
             LocationEventGenerator
                 .generateUserLocations(10)
                 .map { userLocation -> KeyValue(userLocation.userId, userLocation) }
         )
 
         val driverRequest = LocationEventGenerator.generateDriverRequests(howMany = 1).first()
-        produce(Topics.driverRequests, listOf<KeyValue<TrackingId, NearbyDriversRequested>>(KeyValue(driverRequest.trackingId, driverRequest)))
+        produce(driverRequests, listOf<KeyValue<TrackingId, NearbyDriversRequested>>(KeyValue(driverRequest.trackingId, driverRequest)))
 
-        val availableDrivers = consume(Topics.availableDrivers, Duration.ofSeconds(1), 1)
+        val availableDrivers = consume(availableDrivers, Duration.ofSeconds(1), 1)
 
         assertThat(availableDrivers)
             .hasSize(1)
@@ -42,13 +45,15 @@ class LocationServiceTest {
 
     @Test
     fun `should find stored user location`() {
-        val original = UserLocation("driver@drivers.com", Location(37.7534327, -122.4344288), UserRole.DRIVER)
-        locationService.recordUserLocation(original)
+        val location = UserLocation("driver@drivers.com", Location(37.7534327, -122.4344288), UserRole.DRIVER)
+        locationService.recordUserLocation(location)
 
-        val retrieved = locationService.locateUser(original.userId)
-        assertThat(retrieved).isEqualTo(original)
+        val locations = consume(userLocations, Duration.ofSeconds(1), 1)
+        assertThat(locations).isNotEmpty.contains(location).describedAs("precondition")
+
+        val retrieved = locationService.locateUser(location.userId)
+        assertThat(retrieved).isEqualTo(location)
     }
-
 
     /* * * * * * * * * * * * * * * * * *   M A C H I N E R Y   * * * * * * * * * * * * * * * * */
     private lateinit var locationService: LocationService
@@ -64,8 +69,7 @@ class LocationServiceTest {
             Properties())
         properties[IntegrationTestUtils.INTERNAL_LEAVE_GROUP_ON_CLOSE] = true
 
-        val topology = LocationService.topology(mapService)
-        locationService = LocationService(topology, KafkaStreamsConfig(properties))
+        locationService = LocationService(LocationService.topology(mapService), KafkaStreamsConfig(properties))
     }
 
     @After
@@ -91,7 +95,7 @@ class LocationServiceTest {
             UserWithDistance("elon", "1 hour 12 mins (113 km)", DistanceInMeters(112851), Duration.ofSeconds(4314))
         )
 
-        private fun <K, V> consume(topic: Topic<K, V>, waitFor: Duration, maxMessages: Int): List<V> =
+        private fun <V> consume(topic: Topic<*, V>, waitFor: Duration, maxMessages: Int): List<V> =
             IntegrationTestUtils.readValues<V>(
                 topic.name,
                 TestUtils.consumerConfig(EMBEDDED_KAFKA.bootstrapServers(),

@@ -16,7 +16,7 @@ data class UserLocation(val userId: UserId, val coordinates: STC, val userRole: 
     companion object
 }
 
-data class SpaceTimeCoordinates(val place: Location, val time: OffsetDateTime = OffsetDateTime.now())
+data class SpaceTimeCoordinates(val place: Location, val time: OffsetDateTime = OffsetDateTime.now(Clock.systemUTC()))
 typealias STC = SpaceTimeCoordinates
 
 data class DistanceInMeters(val distance: Long) { companion object }
