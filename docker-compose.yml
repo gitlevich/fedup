@@ -136,12 +136,12 @@ services:
     - ./testHelpers/kafka/server-jaas.conf:/opt/kafka/config/server-jaas.conf
     # - ./testHelpers/kafka/log4j.properties:/opt/kafka/config/log4j.properties
 
-  # # schema-registry:
-  #   image: confluent/schema-registry
-  #   ports:
-  #     - 8081:8081
-  #   networks:
-  #     - servicebus
+#  schema-registry:
+#     image: confluent/schema-registry
+#     ports:
+#       - 8081:8081
+#     networks:
+#       - servicebus
 
   # kafka-rest:
   #   image: cgswong/confluent-rest-proxy

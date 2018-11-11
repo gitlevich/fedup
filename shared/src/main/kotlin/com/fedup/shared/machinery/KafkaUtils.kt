@@ -1,14 +1,13 @@
 package com.fedup.shared.machinery
 
-import com.fedup.shared.protocol.*
+import com.fedup.shared.protocol.Topic
 import org.apache.kafka.clients.consumer.*
 import org.apache.kafka.clients.producer.*
 import org.apache.kafka.streams.*
-import org.apache.kafka.streams.state.*
-import org.awaitility.Awaitility.*
-import org.rocksdb.*
+import org.apache.kafka.streams.state.RocksDBConfigSetter
+import org.rocksdb.Options
+import java.time.Duration
 import java.util.*
-import java.util.concurrent.*
 
 fun createStreamsConfig(serviceId: String, bootstrapServers: String, stateDir: String, enableExactlyOnceSemantics: Boolean): KafkaStreamsConfig {
     val props = Properties()
@@ -52,7 +51,7 @@ fun <K, V> send(records: List<ProducerRecord<K, V>>, topic: Topic<K, V>) {
     KafkaProducer(
         createStreamsConfig(
             "${topic.name}_service",
-            "localhost:29092",
+            "localhost:9093,localhost:9095,localhost:9097",
             "/tmp/kafka-streams",
             true
         ).props,
@@ -67,9 +66,9 @@ fun <K, V> send(records: List<ProducerRecord<K, V>>, topic: Topic<K, V>) {
     }
 }
 
-fun <K, V> readOne(topic: Topic<K, V>, bootstrapServers: String): List<KeyValue<K, V>> = read(1, topic, bootstrapServers)
+fun <K, V> readOne(topic: Topic<K, V>, bootstrapServers: String): List<KeyValue<K, V>> = read(topic, bootstrapServers)
 
-fun <K, V> read(numberToRead: Int, topic: Topic<K, V>, bootstrapServers: String): List<KeyValue<K, V>> {
+fun <K, V> read(topic: Topic<K, V>, bootstrapServers: String): List<KeyValue<K, V>> {
     val consumerConfig = Properties()
     consumerConfig[ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG] = bootstrapServers
     consumerConfig[ConsumerConfig.GROUP_ID_CONFIG] = "Test-Reader-${UUID.randomUUID()}"
@@ -79,11 +78,8 @@ fun <K, V> read(numberToRead: Int, topic: Topic<K, V>, bootstrapServers: String)
     consumer.subscribe(listOf(topic.name))
 
     val actualValues = ArrayList<KeyValue<K, V>>()
-    await().atMost(2, TimeUnit.SECONDS).until {
-        val records = consumer.poll(100)
-        records.mapTo(actualValues) { KeyValue.pair<K, V>(it.key(), it.value()) }
-        actualValues.size >= numberToRead
-    }
+    val records = consumer.poll(Duration.ofSeconds(1))
+    records.mapTo(actualValues) { KeyValue.pair<K, V>(it.key(), it.value()) }
     consumer.close()
     return actualValues
 }
